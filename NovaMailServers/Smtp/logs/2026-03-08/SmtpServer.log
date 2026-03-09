@@ -1,0 +1,376 @@
+[2026-03-08 04:40:53.966] [T:NovaSmtp.out] [INFO] SMTP Server started on port 25, with 8 event loop threads.
+[2026-03-08 04:41:13.338] [T:NovaSmtp.out] [INFO] SMTP Server started on port 25, with 8 event loop threads.
+[2026-03-08 05:35:28.103] [T:NovaSmtp.out] [INFO] SMTP Server started on port 25, with 8 event loop threads.
+[2026-03-08 05:36:12.704] [T:NovaSmtp.out] [DEBUG] Session created with maxRcptCount=1000, maxDataBytes=10485760, dedupRcpt=true.
+[2026-03-08 05:36:12.704] [T:NovaSmtp.out] [INFO] SMTP client connected, server=smtp.lby.email, greeting=NovaMail SMTP Server
+[2026-03-08 05:36:12.705] [T:NovaSmtp.out] [DEBUG] SMTP command received: EHLO ubuntu
+[2026-03-08 05:36:12.705] [T:NovaSmtp.out] [INFO] EHLO from clientDomain=ubuntu
+[2026-03-08 05:36:12.705] [T:NovaSmtp.out] [DEBUG] SMTP capabilities advertised: PIPELINING=true SIZE=true 8BITMIME=true
+[2026-03-08 05:36:12.706] [T:NovaSmtp.out] [DEBUG] SMTP command received: MAIL FROM:<test@local>
+[2026-03-08 05:36:12.706] [T:NovaSmtp.out] [INFO] MAIL FROM accepted: test@local
+[2026-03-08 05:36:12.706] [T:NovaSmtp.out] [DEBUG] SMTP command received: RCPT TO:<user@local>
+[2026-03-08 05:36:12.706] [T:NovaSmtp.out] [DEBUG] RCPT TO accepted: user@local (total=1)
+[2026-03-08 05:36:12.707] [T:NovaSmtp.out] [DEBUG] SMTP command received: DATA
+[2026-03-08 05:36:12.707] [T:NovaSmtp.out] [INFO] DATA begin: from= rcptCount=0 recipients: 
+[2026-03-08 05:36:12.707] [T:NovaSmtp.out] [INFO] SMTP message received: from= rcptCount=0 size=250
+[2026-03-08 05:36:12.707] [T:NovaSmtp.out] [TRACE] SMTP raw message size=250
+[2026-03-08 05:36:12.707] [T:NovaSmtp.out] [DEBUG] SMTP command received: QUIT
+[2026-03-08 05:36:12.708] [T:NovaSmtp.out] [INFO] SMTP client quit: ehloDomain=unknown
+[2026-03-08 05:42:00.546] [T:NovaSmtp.out] [INFO] SMTP Server started on port 25, with 8 event loop threads.
+[2026-03-08 05:42:04.493] [T:NovaSmtp.out] [DEBUG] Session created with maxRcptCount=1000, maxDataBytes=10485760, dedupRcpt=true.
+[2026-03-08 05:42:04.493] [T:NovaSmtp.out] [INFO] SMTP client connected, server=smtp.lby.email, greeting=NovaMail SMTP Server
+[2026-03-08 05:42:04.493] [T:NovaSmtp.out] [DEBUG] SMTP command received: EHLO ubuntu
+[2026-03-08 05:42:04.493] [T:NovaSmtp.out] [INFO] EHLO from clientDomain=ubuntu
+[2026-03-08 05:42:04.494] [T:NovaSmtp.out] [DEBUG] SMTP capabilities advertised: PIPELINING=true SIZE=true 8BITMIME=true
+[2026-03-08 05:42:04.494] [T:NovaSmtp.out] [DEBUG] SMTP command received: MAIL FROM:<test@local>
+[2026-03-08 05:42:04.494] [T:NovaSmtp.out] [INFO] MAIL FROM accepted: test@local
+[2026-03-08 05:42:04.494] [T:NovaSmtp.out] [DEBUG] SMTP command received: RCPT TO:<user@local>
+[2026-03-08 05:42:04.494] [T:NovaSmtp.out] [DEBUG] RCPT TO accepted: user@local (total=1)
+[2026-03-08 05:42:04.495] [T:NovaSmtp.out] [DEBUG] SMTP command received: DATA
+[2026-03-08 05:42:04.495] [T:NovaSmtp.out] [INFO] DATA begin: from= rcptCount=0 recipients: none
+[2026-03-08 05:42:04.495] [T:NovaSmtp.out] [INFO] SMTP message received: from= rcptCount=0 size=250
+[2026-03-08 05:42:04.495] [T:NovaSmtp.out] [TRACE] SMTP raw message size=250
+[2026-03-08 05:42:04.496] [T:NovaSmtp.out] [DEBUG] SMTP command received: QUIT
+[2026-03-08 05:42:04.496] [T:NovaSmtp.out] [INFO] SMTP client quit: ehloDomain=unknown
+[2026-03-08 05:43:08.115] [T:NovaSmtp.out] [INFO] SMTP Server started on port 25, with 8 event loop threads.
+[2026-03-08 05:43:10.857] [T:NovaSmtp.out] [DEBUG] Session created with maxRcptCount=1000, maxDataBytes=10485760, dedupRcpt=true.
+[2026-03-08 05:43:10.857] [T:NovaSmtp.out] [INFO] SMTP client connected, server=smtp.lby.email, greeting=NovaMail SMTP Server
+[2026-03-08 05:43:10.858] [T:NovaSmtp.out] [DEBUG] SMTP command received: EHLO ubuntu
+[2026-03-08 05:43:10.858] [T:NovaSmtp.out] [INFO] EHLO from clientDomain=ubuntu
+[2026-03-08 05:43:10.858] [T:NovaSmtp.out] [DEBUG] SMTP capabilities advertised: PIPELINING=true SIZE=true 8BITMIME=true
+[2026-03-08 05:43:10.858] [T:NovaSmtp.out] [DEBUG] SMTP command received: MAIL FROM:<test@local>
+[2026-03-08 05:43:10.859] [T:NovaSmtp.out] [INFO] MAIL FROM accepted: test@local
+[2026-03-08 05:43:10.859] [T:NovaSmtp.out] [DEBUG] SMTP command received: RCPT TO:<user@local>
+[2026-03-08 05:43:10.859] [T:NovaSmtp.out] [DEBUG] RCPT TO accepted: user@local (total=1)
+[2026-03-08 05:43:10.859] [T:NovaSmtp.out] [DEBUG] SMTP command received: DATA
+[2026-03-08 05:43:10.859] [T:NovaSmtp.out] [INFO] DATA begin: from= rcptCount=0 recipients: none
+[2026-03-08 05:43:10.860] [T:NovaSmtp.out] [INFO] SMTP message received: from= rcptCount=0 size=250
+[2026-03-08 05:43:10.860] [T:NovaSmtp.out] [TRACE] SMTP raw message size=250
+[2026-03-08 05:43:10.860] [T:NovaSmtp.out] [DEBUG] SMTP command received: QUIT
+[2026-03-08 05:43:10.860] [T:NovaSmtp.out] [INFO] SMTP client quit: ehloDomain=unknown
+[2026-03-08 05:52:16.729] [T:NovaSmtp.out] [INFO] SMTP Server started on port 25, with 8 event loop threads.
+[2026-03-08 05:52:21.957] [T:NovaSmtp.out] [DEBUG] Session created with maxRcptCount=1000, maxDataBytes=10485760, dedupRcpt=true.
+[2026-03-08 05:52:21.957] [T:NovaSmtp.out] [INFO] SMTP client connected, server=smtp.lby.email, greeting=NovaMail SMTP Server
+[2026-03-08 05:52:21.957] [T:NovaSmtp.out] [DEBUG] SMTP command received: EHLO ubuntu
+[2026-03-08 05:52:21.957] [T:NovaSmtp.out] [INFO] EHLO from clientDomain=ubuntu
+[2026-03-08 05:52:21.958] [T:NovaSmtp.out] [DEBUG] SMTP capabilities advertised: PIPELINING=true SIZE=true 8BITMIME=true
+[2026-03-08 05:52:21.958] [T:NovaSmtp.out] [DEBUG] SMTP command received: MAIL FROM:<test@local>
+[2026-03-08 05:52:21.958] [T:NovaSmtp.out] [INFO] MAIL FROM accepted: test@local
+[2026-03-08 05:52:21.958] [T:NovaSmtp.out] [DEBUG] SMTP command received: RCPT TO:<user@local>
+[2026-03-08 05:52:21.959] [T:NovaSmtp.out] [DEBUG] RCPT TO accepted: user@local (total=1)
+[2026-03-08 05:52:21.959] [T:NovaSmtp.out] [DEBUG] SMTP command received: DATA
+[2026-03-08 05:52:21.959] [T:NovaSmtp.out] [INFO] DATA begin: from=test@local rcptCount=1 recipients: user@local 
+[2026-03-08 05:52:21.959] [T:NovaSmtp.out] [INFO] SMTP message received: from=test@local rcptCount=1 size=250
+[2026-03-08 05:52:21.959] [T:NovaSmtp.out] [TRACE] SMTP raw message size=250
+[2026-03-08 05:52:21.960] [T:NovaSmtp.out] [DEBUG] SMTP command received: QUIT
+[2026-03-08 05:52:21.960] [T:NovaSmtp.out] [INFO] SMTP client quit: ehloDomain=ubuntu
+[2026-03-08 05:57:25.137] [T:NovaSmtp.out] [INFO] SMTP Server started on port 25, with 8 event loop threads.
+[2026-03-08 05:57:29.510] [T:NovaSmtp.out] [INFO] SMTP client connected, server=smtp.lby.email, greeting=NovaMail SMTP Server
+[2026-03-08 05:57:29.511] [T:NovaSmtp.out] [INFO] EHLO from clientDomain=ubuntu
+[2026-03-08 05:57:29.512] [T:NovaSmtp.out] [INFO] MAIL FROM accepted: test@local
+[2026-03-08 05:57:29.513] [T:NovaSmtp.out] [INFO] DATA begin: from=test@local rcptCount=1 recipients: user@local 
+[2026-03-08 05:57:29.514] [T:NovaSmtp.out] [INFO] SMTP message received: from=test@local rcptCount=1 size=250
+[2026-03-08 05:57:29.514] [T:NovaSmtp.out] [INFO] SMTP client quit: ehloDomain=ubuntu
+[2026-03-08 07:02:51.400] [T:NovaSmtp.out] [INFO] true
+[2026-03-08 07:02:51.400] [T:NovaSmtp.out] [INFO] Creating MySQL connection pool...
+[2026-03-08 07:02:51.401] [T:NovaSmtp.out] [ERROR] DataBasePool connection create failed: CDK Error: Connection refused (generic:111)
+[2026-03-08 07:02:51.401] [T:NovaSmtp.out] [ERROR] DataBasePool connection create failed: CDK Error: Connection refused (generic:111)
+[2026-03-08 07:02:51.402] [T:NovaSmtp.out] [ERROR] DataBasePool connection create failed: CDK Error: Connection refused (generic:111)
+[2026-03-08 07:02:51.402] [T:NovaSmtp.out] [ERROR] DataBasePool connection create failed: CDK Error: Connection refused (generic:111)
+[2026-03-08 07:02:51.402] [T:NovaSmtp.out] [ERROR] DataBasePool connection create failed: CDK Error: Connection refused (generic:111)
+[2026-03-08 07:02:51.402] [T:NovaSmtp.out] [ERROR] DataBasePool connection create failed: CDK Error: Connection refused (generic:111)
+[2026-03-08 07:02:51.403] [T:NovaSmtp.out] [ERROR] DataBasePool connection create failed: CDK Error: Connection refused (generic:111)
+[2026-03-08 07:02:51.403] [T:NovaSmtp.out] [ERROR] DataBasePool connection create failed: CDK Error: Connection refused (generic:111)
+[2026-03-08 07:02:51.403] [T:NovaSmtp.out] [ERROR] DataBasePool connection create failed: CDK Error: Connection refused (generic:111)
+[2026-03-08 07:02:51.403] [T:NovaSmtp.out] [ERROR] DataBasePool connection create failed: CDK Error: Connection refused (generic:111)
+[2026-03-08 07:02:51.403] [T:NovaSmtp.out] [ERROR] DataBasePool connection create failed: CDK Error: Connection refused (generic:111)
+[2026-03-08 07:02:51.404] [T:NovaSmtp.out] [ERROR] DataBasePool connection create failed: CDK Error: Connection refused (generic:111)
+[2026-03-08 07:02:51.404] [T:NovaSmtp.out] [ERROR] DataBasePool connection create failed: CDK Error: Connection refused (generic:111)
+[2026-03-08 07:02:51.404] [T:NovaSmtp.out] [ERROR] DataBasePool connection create failed: CDK Error: Connection refused (generic:111)
+[2026-03-08 07:02:51.404] [T:NovaSmtp.out] [ERROR] DataBasePool connection create failed: CDK Error: Connection refused (generic:111)
+[2026-03-08 07:02:51.405] [T:NovaSmtp.out] [ERROR] DataBasePool connection create failed: CDK Error: Connection refused (generic:111)
+[2026-03-08 07:04:39.591] [T:NovaSmtp.out] [INFO] true
+[2026-03-08 07:04:39.591] [T:NovaSmtp.out] [INFO] Creating MySQL connection pool...
+[2026-03-08 07:04:39.876] [T:NovaSmtp.out] [INFO] MySQL connection created [1/16]
+[2026-03-08 07:04:40.154] [T:NovaSmtp.out] [INFO] MySQL connection created [2/16]
+[2026-03-08 07:04:40.396] [T:NovaSmtp.out] [INFO] MySQL connection created [3/16]
+[2026-03-08 07:04:40.662] [T:NovaSmtp.out] [INFO] MySQL connection created [4/16]
+[2026-03-08 07:04:40.898] [T:NovaSmtp.out] [INFO] MySQL connection created [5/16]
+[2026-03-08 07:04:41.153] [T:NovaSmtp.out] [INFO] MySQL connection created [6/16]
+[2026-03-08 07:04:41.416] [T:NovaSmtp.out] [INFO] MySQL connection created [7/16]
+[2026-03-08 07:04:41.669] [T:NovaSmtp.out] [INFO] MySQL connection created [8/16]
+[2026-03-08 07:04:41.993] [T:NovaSmtp.out] [INFO] MySQL connection created [9/16]
+[2026-03-08 07:04:42.229] [T:NovaSmtp.out] [INFO] MySQL connection created [10/16]
+[2026-03-08 07:04:42.477] [T:NovaSmtp.out] [INFO] MySQL connection created [11/16]
+[2026-03-08 07:04:42.751] [T:NovaSmtp.out] [INFO] MySQL connection created [12/16]
+[2026-03-08 07:04:43.009] [T:NovaSmtp.out] [INFO] MySQL connection created [13/16]
+[2026-03-08 07:04:43.258] [T:NovaSmtp.out] [INFO] MySQL connection created [14/16]
+[2026-03-08 07:04:43.508] [T:NovaSmtp.out] [INFO] MySQL connection created [15/16]
+[2026-03-08 07:04:43.766] [T:NovaSmtp.out] [INFO] MySQL connection created [16/16]
+[2026-03-08 07:04:43.766] [T:NovaSmtp.out] [INFO] DataBasePool initialized, available=16
+[2026-03-08 07:04:43.767] [T:NovaSmtp.out] [INFO] SMTP Server started on port 25, with 8 event loop threads.
+[2026-03-08 07:07:18.682] [T:NovaSmtp.out] [INFO] Initializing DataBasePool, size=16
+[2026-03-08 07:07:18.682] [T:NovaSmtp.out] [INFO] Creating MySQL connection pool...
+[2026-03-08 07:07:18.961] [T:NovaSmtp.out] [INFO] MySQL connection created [1/16]
+[2026-03-08 07:07:19.272] [T:NovaSmtp.out] [INFO] MySQL connection created [2/16]
+[2026-03-08 07:07:19.568] [T:NovaSmtp.out] [INFO] MySQL connection created [3/16]
+[2026-03-08 07:07:19.817] [T:NovaSmtp.out] [INFO] MySQL connection created [4/16]
+[2026-03-08 07:07:20.115] [T:NovaSmtp.out] [INFO] MySQL connection created [5/16]
+[2026-03-08 07:07:20.385] [T:NovaSmtp.out] [INFO] MySQL connection created [6/16]
+[2026-03-08 07:07:20.660] [T:NovaSmtp.out] [INFO] MySQL connection created [7/16]
+[2026-03-08 07:07:20.932] [T:NovaSmtp.out] [INFO] MySQL connection created [8/16]
+[2026-03-08 07:07:21.249] [T:NovaSmtp.out] [INFO] MySQL connection created [9/16]
+[2026-03-08 07:07:21.544] [T:NovaSmtp.out] [INFO] MySQL connection created [10/16]
+[2026-03-08 07:07:21.825] [T:NovaSmtp.out] [INFO] MySQL connection created [11/16]
+[2026-03-08 07:07:22.106] [T:NovaSmtp.out] [INFO] MySQL connection created [12/16]
+[2026-03-08 07:07:22.354] [T:NovaSmtp.out] [INFO] MySQL connection created [13/16]
+[2026-03-08 07:07:22.643] [T:NovaSmtp.out] [INFO] MySQL connection created [14/16]
+[2026-03-08 07:07:22.934] [T:NovaSmtp.out] [INFO] MySQL connection created [15/16]
+[2026-03-08 07:07:23.217] [T:NovaSmtp.out] [INFO] MySQL connection created [16/16]
+[2026-03-08 07:07:23.217] [T:NovaSmtp.out] [INFO] DataBasePool initialized, available=16
+[2026-03-08 07:07:23.217] [T:NovaSmtp.out] [INFO] SMTP Server started on port 25, with 8 event loop threads.
+[2026-03-08 07:15:55.977] [T:NovaSmtp.out] [INFO] Initializing DataBasePool, size=16
+[2026-03-08 07:15:55.977] [T:NovaSmtp.out] [INFO] Creating MySQL connection pool...
+[2026-03-08 07:15:56.219] [T:NovaSmtp.out] [INFO] MySQL connection created [1/16]
+[2026-03-08 07:15:56.450] [T:NovaSmtp.out] [INFO] MySQL connection created [2/16]
+[2026-03-08 07:15:56.698] [T:NovaSmtp.out] [INFO] MySQL connection created [3/16]
+[2026-03-08 07:15:56.947] [T:NovaSmtp.out] [INFO] MySQL connection created [4/16]
+[2026-03-08 07:15:57.185] [T:NovaSmtp.out] [INFO] MySQL connection created [5/16]
+[2026-03-08 07:15:57.440] [T:NovaSmtp.out] [INFO] MySQL connection created [6/16]
+[2026-03-08 07:15:57.664] [T:NovaSmtp.out] [INFO] MySQL connection created [7/16]
+[2026-03-08 07:15:57.904] [T:NovaSmtp.out] [INFO] MySQL connection created [8/16]
+[2026-03-08 07:15:58.150] [T:NovaSmtp.out] [INFO] MySQL connection created [9/16]
+[2026-03-08 07:15:58.386] [T:NovaSmtp.out] [INFO] MySQL connection created [10/16]
+[2026-03-08 07:15:58.652] [T:NovaSmtp.out] [INFO] MySQL connection created [11/16]
+[2026-03-08 07:15:58.914] [T:NovaSmtp.out] [INFO] MySQL connection created [12/16]
+[2026-03-08 07:15:59.189] [T:NovaSmtp.out] [INFO] MySQL connection created [13/16]
+[2026-03-08 07:15:59.467] [T:NovaSmtp.out] [INFO] MySQL connection created [14/16]
+[2026-03-08 07:15:59.719] [T:NovaSmtp.out] [INFO] MySQL connection created [15/16]
+[2026-03-08 07:15:59.979] [T:NovaSmtp.out] [INFO] MySQL connection created [16/16]
+[2026-03-08 07:15:59.979] [T:NovaSmtp.out] [INFO] DataBasePool initialized, available=16
+[2026-03-08 07:15:59.980] [T:NovaSmtp.out] [INFO] SMTP Server started on port 25, with 8 event loop threads.
+[2026-03-08 07:16:47.461] [T:NovaSmtp.out] [INFO] Initializing DataBasePool, size=16
+[2026-03-08 07:16:47.461] [T:NovaSmtp.out] [INFO] Creating MySQL connection pool...
+[2026-03-08 07:16:47.732] [T:NovaSmtp.out] [INFO] MySQL connection created [1/16]
+[2026-03-08 07:16:48.012] [T:NovaSmtp.out] [INFO] MySQL connection created [2/16]
+[2026-03-08 07:16:48.494] [T:NovaSmtp.out] [INFO] MySQL connection created [3/16]
+[2026-03-08 07:16:48.738] [T:NovaSmtp.out] [INFO] MySQL connection created [4/16]
+[2026-03-08 07:16:48.989] [T:NovaSmtp.out] [INFO] MySQL connection created [5/16]
+[2026-03-08 07:16:49.239] [T:NovaSmtp.out] [INFO] MySQL connection created [6/16]
+[2026-03-08 07:16:49.484] [T:NovaSmtp.out] [INFO] MySQL connection created [7/16]
+[2026-03-08 07:16:49.729] [T:NovaSmtp.out] [INFO] MySQL connection created [8/16]
+[2026-03-08 07:16:49.985] [T:NovaSmtp.out] [INFO] MySQL connection created [9/16]
+[2026-03-08 07:16:50.230] [T:NovaSmtp.out] [INFO] MySQL connection created [10/16]
+[2026-03-08 07:16:50.500] [T:NovaSmtp.out] [INFO] MySQL connection created [11/16]
+[2026-03-08 07:16:50.761] [T:NovaSmtp.out] [INFO] MySQL connection created [12/16]
+[2026-03-08 07:16:51.015] [T:NovaSmtp.out] [INFO] MySQL connection created [13/16]
+[2026-03-08 07:16:51.270] [T:NovaSmtp.out] [INFO] MySQL connection created [14/16]
+[2026-03-08 07:16:51.519] [T:NovaSmtp.out] [INFO] MySQL connection created [15/16]
+[2026-03-08 07:16:51.753] [T:NovaSmtp.out] [INFO] MySQL connection created [16/16]
+[2026-03-08 07:16:51.753] [T:NovaSmtp.out] [INFO] DataBasePool initialized, available=16
+[2026-03-08 07:16:51.754] [T:NovaSmtp.out] [INFO] SMTP Server started on port 25, with 8 event loop threads.
+[2026-03-08 07:17:59.586] [T:NovaSmtp.out] [INFO] Initializing DataBasePool, size=16
+[2026-03-08 07:17:59.586] [T:NovaSmtp.out] [INFO] Creating MySQL connection pool...
+[2026-03-08 07:17:59.920] [T:NovaSmtp.out] [DEBUG] MySQL connection created [1/16]
+[2026-03-08 07:18:00.245] [T:NovaSmtp.out] [DEBUG] MySQL connection created [2/16]
+[2026-03-08 07:18:00.621] [T:NovaSmtp.out] [DEBUG] MySQL connection created [3/16]
+[2026-03-08 07:18:00.896] [T:NovaSmtp.out] [DEBUG] MySQL connection created [4/16]
+[2026-03-08 07:18:01.196] [T:NovaSmtp.out] [DEBUG] MySQL connection created [5/16]
+[2026-03-08 07:18:01.539] [T:NovaSmtp.out] [DEBUG] MySQL connection created [6/16]
+[2026-03-08 07:18:01.927] [T:NovaSmtp.out] [DEBUG] MySQL connection created [7/16]
+[2026-03-08 07:18:02.193] [T:NovaSmtp.out] [DEBUG] MySQL connection created [8/16]
+[2026-03-08 07:18:02.500] [T:NovaSmtp.out] [DEBUG] MySQL connection created [9/16]
+[2026-03-08 07:18:02.822] [T:NovaSmtp.out] [DEBUG] MySQL connection created [10/16]
+[2026-03-08 07:18:03.084] [T:NovaSmtp.out] [DEBUG] MySQL connection created [11/16]
+[2026-03-08 07:18:03.357] [T:NovaSmtp.out] [DEBUG] MySQL connection created [12/16]
+[2026-03-08 07:18:03.655] [T:NovaSmtp.out] [DEBUG] MySQL connection created [13/16]
+[2026-03-08 07:18:03.890] [T:NovaSmtp.out] [DEBUG] MySQL connection created [14/16]
+[2026-03-08 07:18:04.202] [T:NovaSmtp.out] [DEBUG] MySQL connection created [15/16]
+[2026-03-08 07:18:04.461] [T:NovaSmtp.out] [DEBUG] MySQL connection created [16/16]
+[2026-03-08 07:18:04.462] [T:NovaSmtp.out] [INFO] DataBasePool initialized, available=16
+[2026-03-08 07:18:04.462] [T:NovaSmtp.out] [INFO] SMTP Server started on port 25, with 8 event loop threads.
+[2026-03-08 07:19:52.625] [T:NovaSmtp.out] [INFO] Initializing DataBasePool, size=16
+[2026-03-08 07:19:52.625] [T:NovaSmtp.out] [DEBUG] Creating MySQL connection pool...
+[2026-03-08 07:19:52.895] [T:NovaSmtp.out] [DEBUG] MySQL connection created [1/16]
+[2026-03-08 07:19:53.158] [T:NovaSmtp.out] [DEBUG] MySQL connection created [2/16]
+[2026-03-08 07:19:53.401] [T:NovaSmtp.out] [DEBUG] MySQL connection created [3/16]
+[2026-03-08 07:19:53.671] [T:NovaSmtp.out] [DEBUG] MySQL connection created [4/16]
+[2026-03-08 07:19:53.911] [T:NovaSmtp.out] [DEBUG] MySQL connection created [5/16]
+[2026-03-08 07:19:54.157] [T:NovaSmtp.out] [DEBUG] MySQL connection created [6/16]
+[2026-03-08 07:19:54.402] [T:NovaSmtp.out] [DEBUG] MySQL connection created [7/16]
+[2026-03-08 07:19:54.639] [T:NovaSmtp.out] [DEBUG] MySQL connection created [8/16]
+[2026-03-08 07:19:55.885] [T:NovaSmtp.out] [DEBUG] MySQL connection created [9/16]
+[2026-03-08 07:19:56.139] [T:NovaSmtp.out] [DEBUG] MySQL connection created [10/16]
+[2026-03-08 07:19:56.389] [T:NovaSmtp.out] [DEBUG] MySQL connection created [11/16]
+[2026-03-08 07:19:56.639] [T:NovaSmtp.out] [DEBUG] MySQL connection created [12/16]
+[2026-03-08 07:19:56.910] [T:NovaSmtp.out] [DEBUG] MySQL connection created [13/16]
+[2026-03-08 07:19:57.179] [T:NovaSmtp.out] [DEBUG] MySQL connection created [14/16]
+[2026-03-08 07:19:57.426] [T:NovaSmtp.out] [DEBUG] MySQL connection created [15/16]
+[2026-03-08 07:19:57.663] [T:NovaSmtp.out] [DEBUG] MySQL connection created [16/16]
+[2026-03-08 07:19:57.663] [T:NovaSmtp.out] [INFO] DataBasePool initialized, available=16
+[2026-03-08 07:19:57.664] [T:NovaSmtp.out] [INFO] SMTP Server started on port 25, with 8 event loop threads.
+[2026-03-08 07:21:24.173] [T:NovaSmtp.out] [INFO] Initializing DataBasePool, size=16
+[2026-03-08 07:21:24.173] [T:NovaSmtp.out] [DEBUG] Creating MySQL connection pool...
+[2026-03-08 07:21:24.410] [T:NovaSmtp.out] [DEBUG] MySQL connection created [1/16]
+[2026-03-08 07:21:24.654] [T:NovaSmtp.out] [DEBUG] MySQL connection created [2/16]
+[2026-03-08 07:21:24.897] [T:NovaSmtp.out] [DEBUG] MySQL connection created [3/16]
+[2026-03-08 07:21:25.131] [T:NovaSmtp.out] [DEBUG] MySQL connection created [4/16]
+[2026-03-08 07:21:25.374] [T:NovaSmtp.out] [DEBUG] MySQL connection created [5/16]
+[2026-03-08 07:21:25.625] [T:NovaSmtp.out] [DEBUG] MySQL connection created [6/16]
+[2026-03-08 07:21:25.864] [T:NovaSmtp.out] [DEBUG] MySQL connection created [7/16]
+[2026-03-08 07:21:26.114] [T:NovaSmtp.out] [DEBUG] MySQL connection created [8/16]
+[2026-03-08 07:21:26.366] [T:NovaSmtp.out] [DEBUG] MySQL connection created [9/16]
+[2026-03-08 07:21:26.624] [T:NovaSmtp.out] [DEBUG] MySQL connection created [10/16]
+[2026-03-08 07:21:26.873] [T:NovaSmtp.out] [DEBUG] MySQL connection created [11/16]
+[2026-03-08 07:21:27.099] [T:NovaSmtp.out] [DEBUG] MySQL connection created [12/16]
+[2026-03-08 07:21:27.343] [T:NovaSmtp.out] [DEBUG] MySQL connection created [13/16]
+[2026-03-08 07:21:27.589] [T:NovaSmtp.out] [DEBUG] MySQL connection created [14/16]
+[2026-03-08 07:21:27.827] [T:NovaSmtp.out] [DEBUG] MySQL connection created [15/16]
+[2026-03-08 07:21:28.072] [T:NovaSmtp.out] [DEBUG] MySQL connection created [16/16]
+[2026-03-08 07:21:28.072] [T:NovaSmtp.out] [DEBUG] DataBasePool initialized, available=16
+[2026-03-08 07:21:28.073] [T:NovaSmtp.out] [INFO] SMTP Server started on port 25, with 8 event loop threads.
+[2026-03-08 07:21:38.598] [T:NovaSmtp.out] [DEBUG] Session created with maxRcptCount=1000, maxDataBytes=10485760, dedupRcpt=true.
+[2026-03-08 07:21:38.598] [T:NovaSmtp.out] [INFO] SMTP client connected, server=smtp.lby.email, greeting=NovaMail SMTP Server
+[2026-03-08 07:21:38.599] [T:NovaSmtp.out] [DEBUG] SMTP command received: EHLO ubuntu
+[2026-03-08 07:21:38.599] [T:NovaSmtp.out] [INFO] EHLO from clientDomain=ubuntu
+[2026-03-08 07:21:38.599] [T:NovaSmtp.out] [DEBUG] SMTP capabilities advertised: PIPELINING=true SIZE=true 8BITMIME=true
+[2026-03-08 07:21:38.599] [T:NovaSmtp.out] [DEBUG] SMTP command received: MAIL FROM:<test@local>
+[2026-03-08 07:21:38.599] [T:NovaSmtp.out] [INFO] MAIL FROM accepted: test@local
+[2026-03-08 07:21:38.600] [T:NovaSmtp.out] [DEBUG] SMTP command received: RCPT TO:<user@local>
+[2026-03-08 07:21:38.600] [T:NovaSmtp.out] [DEBUG] RCPT TO accepted: user@local (total=1)
+[2026-03-08 07:21:38.600] [T:NovaSmtp.out] [DEBUG] SMTP command received: DATA
+[2026-03-08 07:21:38.600] [T:NovaSmtp.out] [INFO] DATA begin: from=test@local rcptCount=1 recipients: user@local 
+[2026-03-08 07:21:38.601] [T:NovaSmtp.out] [INFO] SMTP message received: from=test@local rcptCount=1 size=250
+[2026-03-08 07:21:38.601] [T:NovaSmtp.out] [TRACE] SMTP raw message size=250
+[2026-03-08 07:21:38.601] [T:NovaSmtp.out] [DEBUG] SMTP command received: QUIT
+[2026-03-08 07:21:38.601] [T:NovaSmtp.out] [INFO] SMTP client quit: ehloDomain=ubuntu
+[2026-03-08 07:25:16.781] [T:NovaSmtp.out] [INFO] Initializing DataBasePool, size=16
+[2026-03-08 07:25:16.781] [T:NovaSmtp.out] [DEBUG] Creating MySQL connection pool...
+[2026-03-08 07:25:17.051] [T:NovaSmtp.out] [DEBUG] MySQL connection created [1/16]
+[2026-03-08 07:25:17.383] [T:NovaSmtp.out] [DEBUG] MySQL connection created [2/16]
+[2026-03-08 07:25:17.697] [T:NovaSmtp.out] [DEBUG] MySQL connection created [3/16]
+[2026-03-08 07:25:17.952] [T:NovaSmtp.out] [DEBUG] MySQL connection created [4/16]
+[2026-03-08 07:25:18.216] [T:NovaSmtp.out] [DEBUG] MySQL connection created [5/16]
+[2026-03-08 07:25:18.499] [T:NovaSmtp.out] [DEBUG] MySQL connection created [6/16]
+[2026-03-08 07:25:18.758] [T:NovaSmtp.out] [DEBUG] MySQL connection created [7/16]
+[2026-03-08 07:25:19.020] [T:NovaSmtp.out] [DEBUG] MySQL connection created [8/16]
+[2026-03-08 07:25:19.315] [T:NovaSmtp.out] [DEBUG] MySQL connection created [9/16]
+[2026-03-08 07:25:19.641] [T:NovaSmtp.out] [DEBUG] MySQL connection created [10/16]
+[2026-03-08 07:25:19.938] [T:NovaSmtp.out] [DEBUG] MySQL connection created [11/16]
+[2026-03-08 07:25:20.194] [T:NovaSmtp.out] [DEBUG] MySQL connection created [12/16]
+[2026-03-08 07:25:20.479] [T:NovaSmtp.out] [DEBUG] MySQL connection created [13/16]
+[2026-03-08 07:25:20.761] [T:NovaSmtp.out] [DEBUG] MySQL connection created [14/16]
+[2026-03-08 07:25:21.027] [T:NovaSmtp.out] [DEBUG] MySQL connection created [15/16]
+[2026-03-08 07:25:21.310] [T:NovaSmtp.out] [DEBUG] MySQL connection created [16/16]
+[2026-03-08 07:25:21.311] [T:NovaSmtp.out] [DEBUG] DataBasePool initialized, available=16
+[2026-03-08 07:25:21.311] [T:NovaSmtp.out] [INFO] SMTP Server started on port 25, with 8 event loop threads.
+[2026-03-08 07:27:12.098] [T:NovaSmtp.out] [DEBUG] Session created with maxRcptCount=1000, maxDataBytes=10485760, dedupRcpt=true.
+[2026-03-08 07:27:12.098] [T:NovaSmtp.out] [INFO] SMTP client connected, server=smtp.lby.email, greeting=NovaMail SMTP Server
+[2026-03-08 07:27:12.099] [T:NovaSmtp.out] [DEBUG] SMTP command received: EHLO ubuntu
+[2026-03-08 07:27:12.099] [T:NovaSmtp.out] [INFO] EHLO from clientDomain=ubuntu
+[2026-03-08 07:27:12.099] [T:NovaSmtp.out] [DEBUG] SMTP capabilities advertised: PIPELINING=true SIZE=true 8BITMIME=true
+[2026-03-08 07:27:12.099] [T:NovaSmtp.out] [DEBUG] SMTP command received: MAIL FROM:<test@local>
+[2026-03-08 07:27:12.099] [T:NovaSmtp.out] [INFO] MAIL FROM accepted: test@local
+[2026-03-08 07:27:12.100] [T:NovaSmtp.out] [DEBUG] SMTP command received: RCPT TO:<user@local>
+[2026-03-08 07:27:12.100] [T:NovaSmtp.out] [DEBUG] RCPT TO accepted: user@local (total=1)
+[2026-03-08 07:27:12.100] [T:NovaSmtp.out] [DEBUG] SMTP command received: DATA
+[2026-03-08 07:27:12.100] [T:NovaSmtp.out] [INFO] DATA begin: from=test@local rcptCount=1 recipients: user@local 
+[2026-03-08 07:27:12.101] [T:NovaSmtp.out] [INFO] SMTP message received: from=test@local rcptCount=1 size=250
+[2026-03-08 07:27:12.101] [T:NovaSmtp.out] [TRACE] SMTP raw message size=250
+[2026-03-08 07:27:12.101] [T:NovaSmtp.out] [DEBUG] SMTP command received: QUIT
+[2026-03-08 07:27:12.101] [T:NovaSmtp.out] [INFO] SMTP client quit: ehloDomain=ubuntu
+[2026-03-08 07:27:45.323] [T:NovaSmtp.out] [INFO] Initializing DataBasePool, size=16
+[2026-03-08 07:27:45.323] [T:NovaSmtp.out] [DEBUG] Creating MySQL connection pool...
+[2026-03-08 07:27:45.546] [T:NovaSmtp.out] [DEBUG] MySQL connection created [1/16]
+[2026-03-08 07:27:45.771] [T:NovaSmtp.out] [DEBUG] MySQL connection created [2/16]
+[2026-03-08 07:27:46.024] [T:NovaSmtp.out] [DEBUG] MySQL connection created [3/16]
+[2026-03-08 07:27:46.266] [T:NovaSmtp.out] [DEBUG] MySQL connection created [4/16]
+[2026-03-08 07:27:46.504] [T:NovaSmtp.out] [DEBUG] MySQL connection created [5/16]
+[2026-03-08 07:27:46.748] [T:NovaSmtp.out] [DEBUG] MySQL connection created [6/16]
+[2026-03-08 07:27:46.999] [T:NovaSmtp.out] [DEBUG] MySQL connection created [7/16]
+[2026-03-08 07:27:47.241] [T:NovaSmtp.out] [DEBUG] MySQL connection created [8/16]
+[2026-03-08 07:27:47.495] [T:NovaSmtp.out] [DEBUG] MySQL connection created [9/16]
+[2026-03-08 07:27:47.734] [T:NovaSmtp.out] [DEBUG] MySQL connection created [10/16]
+[2026-03-08 07:27:48.005] [T:NovaSmtp.out] [DEBUG] MySQL connection created [11/16]
+[2026-03-08 07:27:48.276] [T:NovaSmtp.out] [DEBUG] MySQL connection created [12/16]
+[2026-03-08 07:27:48.515] [T:NovaSmtp.out] [DEBUG] MySQL connection created [13/16]
+[2026-03-08 07:27:48.750] [T:NovaSmtp.out] [DEBUG] MySQL connection created [14/16]
+[2026-03-08 07:27:48.997] [T:NovaSmtp.out] [DEBUG] MySQL connection created [15/16]
+[2026-03-08 07:27:49.265] [T:NovaSmtp.out] [DEBUG] MySQL connection created [16/16]
+[2026-03-08 07:27:49.265] [T:NovaSmtp.out] [DEBUG] DataBasePool initialized, available=16
+[2026-03-08 07:27:49.266] [T:NovaSmtp.out] [INFO] SMTP Server started on port 25, with 8 event loop threads.
+[2026-03-08 07:27:53.552] [T:NovaSmtp.out] [DEBUG] Session created with maxRcptCount=1000, maxDataBytes=10485760, dedupRcpt=true.
+[2026-03-08 07:27:53.552] [T:NovaSmtp.out] [INFO] SMTP client connected, server=smtp.lby.email, greeting=NovaMail SMTP Server
+[2026-03-08 07:27:53.553] [T:NovaSmtp.out] [DEBUG] SMTP command received: EHLO ubuntu
+[2026-03-08 07:27:53.553] [T:NovaSmtp.out] [INFO] EHLO from clientDomain=ubuntu
+[2026-03-08 07:27:53.553] [T:NovaSmtp.out] [DEBUG] SMTP capabilities advertised: PIPELINING=true SIZE=true 8BITMIME=true
+[2026-03-08 07:27:53.554] [T:NovaSmtp.out] [DEBUG] SMTP command received: MAIL FROM:<test@local>
+[2026-03-08 07:27:53.554] [T:NovaSmtp.out] [INFO] MAIL FROM accepted: test@local
+[2026-03-08 07:27:53.554] [T:NovaSmtp.out] [DEBUG] SMTP command received: RCPT TO:<user@local>
+[2026-03-08 07:27:53.554] [T:NovaSmtp.out] [DEBUG] RCPT TO accepted: user@local (total=1)
+[2026-03-08 07:27:53.555] [T:NovaSmtp.out] [DEBUG] SMTP command received: DATA
+[2026-03-08 07:27:53.555] [T:NovaSmtp.out] [INFO] DATA begin: from=test@local rcptCount=1 recipients: user@local 
+[2026-03-08 07:27:53.555] [T:NovaSmtp.out] [INFO] SMTP message received: from=test@local rcptCount=1 size=250
+[2026-03-08 07:27:53.555] [T:NovaSmtp.out] [TRACE] SMTP raw message size=250
+[2026-03-08 07:27:53.556] [T:NovaSmtp.out] [DEBUG] SMTP command received: QUIT
+[2026-03-08 07:27:53.556] [T:NovaSmtp.out] [INFO] SMTP client quit: ehloDomain=ubuntu
+[2026-03-08 11:27:55.535] [T:NovaSmtp.out] [FileSink] [Info] Initializing DataBasePool, size=16
+[2026-03-08 11:27:55.535] [T:NovaSmtp.out] [FileSink] [Debug] Creating MySQL connection pool...
+[2026-03-08 11:27:59.831] [T:NovaSmtp.out] [FileSink] [Debug] MySQL connection created [1/16]
+[2026-03-08 11:28:00.066] [T:NovaSmtp.out] [FileSink] [Debug] MySQL connection created [2/16]
+[2026-03-08 11:28:00.384] [T:NovaSmtp.out] [FileSink] [Debug] MySQL connection created [3/16]
+[2026-03-08 11:28:00.949] [T:NovaSmtp.out] [FileSink] [Debug] MySQL connection created [4/16]
+[2026-03-08 11:28:01.200] [T:NovaSmtp.out] [FileSink] [Debug] MySQL connection created [5/16]
+[2026-03-08 11:28:01.473] [T:NovaSmtp.out] [FileSink] [Debug] MySQL connection created [6/16]
+[2026-03-08 11:28:01.728] [T:NovaSmtp.out] [FileSink] [Debug] MySQL connection created [7/16]
+[2026-03-08 11:28:01.974] [T:NovaSmtp.out] [FileSink] [Debug] MySQL connection created [8/16]
+[2026-03-08 11:28:02.235] [T:NovaSmtp.out] [FileSink] [Debug] MySQL connection created [9/16]
+[2026-03-08 11:28:02.510] [T:NovaSmtp.out] [FileSink] [Debug] MySQL connection created [10/16]
+[2026-03-08 11:28:02.774] [T:NovaSmtp.out] [FileSink] [Debug] MySQL connection created [11/16]
+[2026-03-08 11:28:03.042] [T:NovaSmtp.out] [FileSink] [Debug] MySQL connection created [12/16]
+[2026-03-08 11:28:03.326] [T:NovaSmtp.out] [FileSink] [Debug] MySQL connection created [13/16]
+[2026-03-08 11:28:03.739] [T:NovaSmtp.out] [FileSink] [Debug] MySQL connection created [14/16]
+[2026-03-08 11:28:04.019] [T:NovaSmtp.out] [FileSink] [Debug] MySQL connection created [15/16]
+[2026-03-08 11:28:04.290] [T:NovaSmtp.out] [FileSink] [Debug] MySQL connection created [16/16]
+[2026-03-08 11:28:04.290] [T:NovaSmtp.out] [FileSink] [Debug] DataBasePool initialized, available=16
+[2026-03-08 11:28:04.291] [T:NovaSmtp.out] [FileSink] [Info] SMTP Server started on port 25, with 8 event loop threads.
+[2026-03-08 11:36:27.282] [T:NovaSmtp.out] [FileSink] [Info] Initializing DataBasePool, size=16
+[2026-03-08 11:36:27.282] [T:NovaSmtp.out] [FileSink] [Debug] Creating MySQL connection pool...
+[2026-03-08 11:36:27.517] [T:NovaSmtp.out] [FileSink] [Debug] MySQL connection created [1/16]
+[2026-03-08 11:36:27.781] [T:NovaSmtp.out] [FileSink] [Debug] MySQL connection created [2/16]
+[2026-03-08 11:36:28.025] [T:NovaSmtp.out] [FileSink] [Debug] MySQL connection created [3/16]
+[2026-03-08 11:36:28.295] [T:NovaSmtp.out] [FileSink] [Debug] MySQL connection created [4/16]
+[2026-03-08 11:36:28.543] [T:NovaSmtp.out] [FileSink] [Debug] MySQL connection created [5/16]
+[2026-03-08 11:36:28.787] [T:NovaSmtp.out] [FileSink] [Debug] MySQL connection created [6/16]
+[2026-03-08 11:36:29.029] [T:NovaSmtp.out] [FileSink] [Debug] MySQL connection created [7/16]
+[2026-03-08 11:36:29.265] [T:NovaSmtp.out] [FileSink] [Debug] MySQL connection created [8/16]
+[2026-03-08 11:36:29.508] [T:NovaSmtp.out] [FileSink] [Debug] MySQL connection created [9/16]
+[2026-03-08 11:36:29.772] [T:NovaSmtp.out] [FileSink] [Debug] MySQL connection created [10/16]
+[2026-03-08 11:36:30.035] [T:NovaSmtp.out] [FileSink] [Debug] MySQL connection created [11/16]
+[2026-03-08 11:36:30.289] [T:NovaSmtp.out] [FileSink] [Debug] MySQL connection created [12/16]
+[2026-03-08 11:36:30.538] [T:NovaSmtp.out] [FileSink] [Debug] MySQL connection created [13/16]
+[2026-03-08 11:36:30.784] [T:NovaSmtp.out] [FileSink] [Debug] MySQL connection created [14/16]
+[2026-03-08 11:36:31.035] [T:NovaSmtp.out] [FileSink] [Debug] MySQL connection created [15/16]
+[2026-03-08 11:36:31.291] [T:NovaSmtp.out] [FileSink] [Debug] MySQL connection created [16/16]
+[2026-03-08 11:36:31.291] [T:NovaSmtp.out] [FileSink] [Debug] DataBasePool initialized, available=16
+[2026-03-08 11:36:31.292] [T:NovaSmtp.out] [FileSink] [Info] SMTP Server started on port 25, with 8 event loop threads.
+[2026-03-08 11:45:08.968] [T:NovaSmtp.out] [FileSink] [Info] Initializing DataBasePool, size=16
+[2026-03-08 11:45:08.968] [T:NovaSmtp.out] [FileSink] [Debug] Creating MySQL connection pool...
+[2026-03-08 11:45:09.210] [T:NovaSmtp.out] [FileSink] [Debug] MySQL connection created [1/16]
+[2026-03-08 11:45:09.454] [T:NovaSmtp.out] [FileSink] [Debug] MySQL connection created [2/16]
+[2026-03-08 11:45:09.704] [T:NovaSmtp.out] [FileSink] [Debug] MySQL connection created [3/16]
+[2026-03-08 11:45:09.942] [T:NovaSmtp.out] [FileSink] [Debug] MySQL connection created [4/16]
+[2026-03-08 11:45:10.204] [T:NovaSmtp.out] [FileSink] [Debug] MySQL connection created [5/16]
+[2026-03-08 11:45:10.451] [T:NovaSmtp.out] [FileSink] [Debug] MySQL connection created [6/16]
+[2026-03-08 11:45:10.696] [T:NovaSmtp.out] [FileSink] [Debug] MySQL connection created [7/16]
+[2026-03-08 11:45:10.948] [T:NovaSmtp.out] [FileSink] [Debug] MySQL connection created [8/16]
+[2026-03-08 11:45:11.202] [T:NovaSmtp.out] [FileSink] [Debug] MySQL connection created [9/16]
+[2026-03-08 11:45:11.447] [T:NovaSmtp.out] [FileSink] [Debug] MySQL connection created [10/16]
+[2026-03-08 11:45:11.685] [T:NovaSmtp.out] [FileSink] [Debug] MySQL connection created [11/16]
+[2026-03-08 11:45:11.944] [T:NovaSmtp.out] [FileSink] [Debug] MySQL connection created [12/16]
+[2026-03-08 11:45:12.207] [T:NovaSmtp.out] [FileSink] [Debug] MySQL connection created [13/16]
+[2026-03-08 11:45:12.486] [T:NovaSmtp.out] [FileSink] [Debug] MySQL connection created [14/16]
+[2026-03-08 11:45:12.719] [T:NovaSmtp.out] [FileSink] [Debug] MySQL connection created [15/16]
+[2026-03-08 11:45:12.958] [T:NovaSmtp.out] [FileSink] [Debug] MySQL connection created [16/16]
+[2026-03-08 11:45:12.958] [T:NovaSmtp.out] [FileSink] [Debug] DataBasePool initialized, available=16
+[2026-03-08 11:45:12.958] [T:NovaSmtp.out] [FileSink] [Info] SMTP Server started on port 25, with 8 event loop threads, startup time: 4.00 s

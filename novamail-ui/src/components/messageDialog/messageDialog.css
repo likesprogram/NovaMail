@@ -1,0 +1,363 @@
+
+/* 编辑课程对话框 */
+.dialogContent form {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: center;
+}
+.dialogContent form * {
+    transition: all .3s;
+}
+
+.dialogContent form .inputBox {
+    width: 100%;
+    padding: 10px 0px;
+    font-size: 16px;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+}
+.dialogContent form .inputBox.noPadding {
+    padding: 10px 0px;
+    align-items: flex-start;
+}
+
+/* 输入框 */
+.dialogContent form .inputBox span {
+    min-width: 80px;
+}
+.dialogContent form .inputBox input, .dialogContent form .inputBox textarea {
+    width: 100%;
+    height: 35px;
+    font-size: 16px;
+    border: 2px solid rgba(200, 200, 200, 1);
+    border-radius: 5px;
+    padding: 0px 10px;
+    outline: none;
+}
+.dialogContent form .inputBox.noPadding textarea {
+    height: 100px;
+    resize: none; /* 禁止调整大小 */
+    padding: 3px 10px;
+    line-height: 28px;
+}
+.dialogContent form .inputBox input:focus, .dialogContent form .inputBox textarea:focus {
+    border: 2px solid rgba(65, 185, 255, 1);
+}
+
+.dialogContent form .inputBox input, .dialogContent form .inputBox .typeBox {
+    width: 100%;
+    font-size: 14px;
+    border-radius: 5px;
+    padding: 0px 10px;
+    outline: none;
+    overflow-y: auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 10px;
+}
+.dialogContent form .inputBox input {
+    height: 35px;
+    border: 2px solid rgba(200, 200, 200, 1);
+}
+.dialogContent form .inputBox .typeBox {
+    min-height: 40px;
+    max-height: 80px;
+    resize: none; /* 禁止调整大小 */
+    padding: 3px 10px;
+    line-height: 28px;
+}
+.dialogContent form .inputBox .typeBox.maxType {
+    max-height: 250px;
+}
+.dialogContent form .inputBox .typeBox.slectList {
+    max-height: 150px;
+}
+.dialogContent form .inputBox input:focus {
+    border: 2px solid rgba(65, 185, 255, 1);
+}
+.dialogContent form .inputBox .listBox {
+    border: 2px solid rgba(200, 200, 200, 1);
+}
+
+/* 列表 */
+.dialogContent form .inputBox .typeBox .typeItem {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100px;
+    height: 30px;
+    font-size: 14px;
+    border-radius: 10px;
+    border: 2px solid rgba(200, 200, 200, 1);
+}
+.dialogContent form .inputBox .typeBox.slectList .typeItem {
+    color: rgba(65, 185, 255, 1);
+    border: 2px solid rgba(65, 185, 255, 1);
+}
+.dialogContent form .inputBox .typeBox .typeItem:hover {
+    color: rgba(65, 185, 255, 1);
+    border: 2px solid rgba(65, 185, 255, 1);
+}
+.dialogContent form .inputBox .typeBox .typeItem.select {
+    color: rgb(255, 255, 255);
+    border: 2px solid rgba(65, 185, 255, 1);
+    background: rgba(65, 185, 255, 1);
+}
+
+/* 表单按钮 */
+.dialogContent form .inputBox .button {
+    width: 100%;
+    height: 35px;
+    overflow: hidden;
+    padding: 0px 5px;
+    border-radius: 5px;
+    transition: .3s all;
+    display: flex;
+    cursor: pointer;
+    justify-content: center;
+    align-items: center;
+}
+.dialogContent form .inputBox .button .iconfont {
+    font-size: 18px;
+    margin-right: 5px;
+    min-width: 0px;
+}
+/* 正常按钮 */
+.dialogContent form .inputBox .button.butNormal {
+    color: rgba(255, 255, 255, 1);
+    background-color: rgba(65, 185, 255, 1);
+}
+.dialogContent form .inputBox .button.butNormal:hover {
+    color: rgba(255, 255, 255, 1);
+    background-color: rgba(65, 185, 255, .8);
+}
+.dialogContent form .inputBox .button.butNormal:active {
+    color: rgba(255, 255, 255, 1);
+    background-color: rgba(65, 185, 255, .9);
+    transition: all .1s;
+}
+/* 删除按钮 */
+.dialogContent form .inputBox .button.butDelete {
+    color: rgba(255, 255, 255, 1);
+    background-color: rgba(255, 0, 0, 1);
+}
+.dialogContent form .inputBox .button.butDelete:hover {
+    color: rgba(255, 255, 255, 1);
+    background-color: rgba(255, 0, 0, .7);
+}
+.dialogContent form .inputBox .button.butDelete:active {
+    color: rgba(255, 255, 255, 1);
+    background-color: rgba(255, 0, 0, .9);
+    transition: all .1s;
+}
+/* 失效按钮 */
+.dialogContent form .inputBox .button.butDisable {
+    color: rgba(255, 255, 255, 1);
+    background-color: rgba(185, 185, 185, 1);
+}
+
+/* 禁用按钮 */
+.dialogContent form .inputBox .button.disable {
+    color: aliceblue;
+    background-color: rgba(180, 180, 180, 1);
+}
+.dialogContent form .inputBox .button.disable:hover {
+    background-color: rgba(180, 180, 180, 0.8);
+}
+.dialogContent form .inputBox .button.disable:active {
+    transition: .1s all;
+    background-color: rgba(180, 180, 180, 1);
+}
+
+/* 上传资源列表 */
+.dialogContent form .inputBox .draggableDataList {
+    width: 100%;
+    max-height: 300px;
+    border: 2px solid rgba(200, 200, 200, 1);
+    border-radius: 5px;
+    padding: 5px;
+    overflow-y: auto;
+}
+.dialogContent form .inputBox .draggableDataList .draggableData {
+    width: 100%;
+    height: 35px;
+    border-radius: 5px;
+    overflow: hidden;
+    position: relative;
+}
+.dialogContent form .inputBox .draggableDataList .draggableData .progress {
+    height: 50%;
+    top: 50%;
+    transform: translateY(-50%) translateX(10px);
+    position: absolute;
+    border-radius: 5px;
+    z-index: 1;
+    background-color: rgba(65, 185, 255, .5);
+}
+.dialogContent form .inputBox .draggableDataList .draggableData .draggableDataInfo {
+    width: 100%;
+    height: 100%;
+    border-radius: 5px;
+    padding-right: 5px;
+    z-index: 2;
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: rgba(255, 255, 255, .5);
+    backdrop-filter: blur(.5rem);
+    -webkit-backdrop-filter: blur(.5rem);
+    -moz-backdrop-filter: blur(.5rem);
+    -ms-backdrop-filter: blur(.5rem);
+}
+.dialogContent form .inputBox .draggableDataList .draggableData .draggableDataInfo .infoMove {
+    flex-shrink: 0;
+    width: 35px;
+    height: 35px;
+    min-width: 0px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.dialogContent form .inputBox .draggableDataList .draggableData .draggableDataInfo .infoNum {
+    flex-shrink: 0;
+    padding: 0px 10px;
+    min-width: 0px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.dialogContent form .inputBox .draggableDataList .draggableData .draggableDataInfo .infoIcon {
+    flex-shrink: 0;
+    min-width: 0px;
+    display: flex;
+    justify-content: center;
+    
+}
+.dialogContent form .inputBox .draggableDataList .draggableData .draggableDataInfo .infoIcon img {
+    width: 25px;
+    height: 25px;
+}
+.dialogContent form .inputBox .draggableDataList .draggableData .draggableDataInfo .infoName {
+    flex: 1;
+    padding: 0px 10px;
+    min-width: 0px;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+}
+.dialogContent form .inputBox .draggableDataList .draggableData .draggableDataInfo .infoType {
+    flex-shrink: 0;
+    max-width: 150px;
+    padding: 0px 5px;
+    min-width: 0px;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+}
+.dialogContent form .inputBox .draggableDataList .draggableData .draggableDataInfo .infoSize {
+    flex-shrink: 0;
+    max-width: 100px;
+    min-width: 0px;
+    padding: 0px 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.dialogContent form .inputBox .draggableDataList .draggableData .draggableDataInfo .infoName span,
+.dialogContent form .inputBox .draggableDataList .draggableData .draggableDataInfo .infoType span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.dialogContent form .inputBox .draggableDataList .draggableData .draggableDataInfo .button {
+    font-size: 14px;
+    min-width: 0px;
+    height: 25px;
+    padding: 0px 5px;
+}
+.dialogContent form .inputBox .draggableDataList .draggableData .draggableDataInfo .button .iconfont {
+    font-size: 16px;
+    margin-right: 2px;
+}
+.dialogContent form .inputBox .draggableDataList .draggableData .draggableDataInfo .infoType.fail {
+    color: rgba(255, 0, 0, 1);
+}
+.dialogContent form .inputBox .draggableDataList .draggableData .draggableDataInfo .infoType.warning {
+    color: rgb(255, 145, 0);
+}
+.dialogContent form .inputBox .draggableDataList .draggableData .draggableDataInfo .infoType.success {
+    color: rgba(65, 185, 255, 1)
+}
+
+/* 对话框底部按钮 */
+.dialogFooterButton {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    display: flex;
+    color: rgba(65, 185, 255, 1);
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: .3s all;
+}
+.dialogFooterButton:hover {
+    background-color: rgba(200, 200, 200, .15);
+}
+.dialogFooterButton:active {
+    transition: .1s all;
+    background-color: rgba(220, 220, 220, .1);
+}
+.dialogFooterButton .textBox {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.dialogFooterButton .textBox .text {
+    font-size: 16px;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.dialogFooterButton .textBox .iconfont {
+    font-size: 20px;
+    height: 100%;
+    margin: 0px 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.dialogFooterButton .line {
+    width: 1px;
+    height: 45%;
+    background-color: rgba(200, 200, 200, 1);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.dialogContent .messageBox {
+    padding: 10px;
+}
+
+.dialogContent .messageBox.primary {
+    color: rgba(0, 0, 0, 1);
+}
+
+.dialogContent .messageBox.success {
+    color: rgba(65, 185, 255, 1);
+}
+
+.dialogContent .messageBox.warning {
+    color: rgba(255, 165, 0, 1);
+}
+
+.dialogContent .messageBox.failure {
+    color: rgba(255, 0, 0, 1);
+}

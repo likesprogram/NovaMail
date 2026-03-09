@@ -1,0 +1,14 @@
+[2026-03-07 05:51:01.050] [T:NovaSmtp.out] [INFO] true
+[2026-03-07 05:53:11.798] [T:NovaSmtp.out] [INFO] true
+[2026-03-07 05:53:54.698] [T:NovaSmtp.out] [INFO] true
+[2026-03-07 05:53:54.698] [T:NovaSmtp.out] [INFO] true
+[2026-03-07 05:55:07.350] [T:NovaSmtp.out] [INFO] SMTP Server started on port 25, with 8 event loop threads
+[2026-03-07 06:13:06.118] [T:NovaSmtp.out] [INFO] SMTP Server started on port 25, with 8 event loop threads
+[2026-03-07 06:33:18.562] [T:NovaSmtp.out] [INFO] SMTP Server started on port 25, with 8 event loop threads.
+[2026-03-07 06:33:28.260] [T:NovaSmtp.out] [INFO] Session created with maxRcptCount=1000, maxDataBytes=10485760, dedupRcpt=true
+[2026-03-07 06:33:28.260] [T:NovaSmtp.out] [INFO] ============ EHLO command received from ubuntu client ============
+[2026-03-07 06:36:55.697] [T:NovaSmtp.out] [INFO] SMTP Server started on port 25, with 8 event loop threads.
+[2026-03-07 06:37:56.739] [T:NovaSmtp.out] [INFO] Session created with maxRcptCount=1000, maxDataBytes=10485760, dedupRcpt=true
+[2026-03-07 06:37:56.740] [T:NovaSmtp.out] [INFO] ============ EHLO command received from ubuntu client ============
+[2026-03-07 06:38:14.111] [T:NovaSmtp.out] [INFO] Session created with maxRcptCount=1000, maxDataBytes=10485760, dedupRcpt=true
+[2026-03-07 06:38:14.113] [T:NovaSmtp.out] [INFO] ============ EHLO command received from ubuntu client ============

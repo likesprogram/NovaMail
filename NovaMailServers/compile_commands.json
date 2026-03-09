@@ -1,0 +1,242 @@
+[
+    {
+        "arguments": [
+            "g++-11",
+            "-c",
+            "-std=c++20",
+            "-Wall",
+            "-Wextra",
+            "-Wpedantic",
+            "-Werror",
+            "-I",
+            "/home/makeos/NovaMail/NovaMailServers/Smtp/../include",
+            "-I",
+            "/home/makeos/NovaMail/NovaMailServers/Smtp/include",
+            "-o",
+            "/home/makeos/NovaMail/NovaMailServers/Smtp/obj//home/makeos/NovaMail/NovaMailServers/Smtp/src/main.o",
+            "src/main.cpp"
+        ],
+        "directory": "/home/makeos/NovaMail/NovaMailServers/Smtp",
+        "file": "src/main.cpp"
+    },
+    {
+        "arguments": [
+            "g++-11",
+            "-c",
+            "-std=c++20",
+            "-Wall",
+            "-Wextra",
+            "-Wpedantic",
+            "-Werror",
+            "-I",
+            "/home/makeos/NovaMail/NovaMailServers/LikeHub/../include",
+            "-I",
+            "/home/makeos/NovaMail/NovaMailServers/LikeHub/include",
+            "-o",
+            "/home/makeos/NovaMail/NovaMailServers/LikeHub/obj/src/RegistryStore.o",
+            "src/RegistryStore.cpp"
+        ],
+        "directory": "/home/makeos/NovaMail/NovaMailServers/LikeHub",
+        "file": "src/RegistryStore.cpp"
+    },
+    {
+        "arguments": [
+            "g++-11",
+            "-c",
+            "-std=c++20",
+            "-Wall",
+            "-Wextra",
+            "-Wpedantic",
+            "-Werror",
+            "-I",
+            "/home/makeos/NovaMail/NovaMailServers/Smtp/../include",
+            "-I",
+            "/home/makeos/NovaMail/NovaMailServers/Smtp/include",
+            "-o",
+            "/home/makeos/NovaMail/NovaMailServers/Smtp/obj//home/makeos/NovaMail/NovaMailServers/Smtp/src/Command.o",
+            "src/Command.cpp"
+        ],
+        "directory": "/home/makeos/NovaMail/NovaMailServers/Smtp",
+        "file": "src/Command.cpp"
+    },
+    {
+        "arguments": [
+            "g++-11",
+            "-c",
+            "-std=c++20",
+            "-Wall",
+            "-Wextra",
+            "-Wpedantic",
+            "-Werror",
+            "-I",
+            "/home/makeos/NovaMail/NovaMailServers/LikeHub/../include",
+            "-I",
+            "/home/makeos/NovaMail/NovaMailServers/LikeHub/include",
+            "-o",
+            "/home/makeos/NovaMail/NovaMailServers/LikeHub/obj/src/LikeHubSDK/LoggerFileSink.o",
+            "src/LikeHubSDK/LoggerFileSink.cpp"
+        ],
+        "directory": "/home/makeos/NovaMail/NovaMailServers/LikeHub",
+        "file": "src/LikeHubSDK/LoggerFileSink.cpp"
+    },
+    {
+        "arguments": [
+            "g++-11",
+            "-c",
+            "-std=c++20",
+            "-Wall",
+            "-Wextra",
+            "-Wpedantic",
+            "-Werror",
+            "-I",
+            "/home/makeos/NovaMail/NovaMailServers/LikeHub/../include",
+            "-I",
+            "/home/makeos/NovaMail/NovaMailServers/LikeHub/include",
+            "-o",
+            "/home/makeos/NovaMail/NovaMailServers/LikeHub/obj/src/Connection.o",
+            "src/Connection.cpp"
+        ],
+        "directory": "/home/makeos/NovaMail/NovaMailServers/LikeHub",
+        "file": "src/Connection.cpp"
+    },
+    {
+        "arguments": [
+            "g++-11",
+            "-c",
+            "-std=c++20",
+            "-Wall",
+            "-Wextra",
+            "-Wpedantic",
+            "-Werror",
+            "-I",
+            "/home/makeos/NovaMail/NovaMailServers/Smtp/../include",
+            "-I",
+            "/home/makeos/NovaMail/NovaMailServers/Smtp/include",
+            "-o",
+            "/home/makeos/NovaMail/NovaMailServers/Smtp/obj//home/makeos/NovaMail/NovaMailServers/Smtp/src/Connection.o",
+            "src/Connection.cpp"
+        ],
+        "directory": "/home/makeos/NovaMail/NovaMailServers/Smtp",
+        "file": "src/Connection.cpp"
+    },
+    {
+        "arguments": [
+            "g++-11",
+            "-c",
+            "-std=c++20",
+            "-Wall",
+            "-Wextra",
+            "-Wpedantic",
+            "-Werror",
+            "-I",
+            "/home/makeos/NovaMail/NovaMailServers/LikeHub/../include",
+            "-I",
+            "/home/makeos/NovaMail/NovaMailServers/LikeHub/include",
+            "-o",
+            "/home/makeos/NovaMail/NovaMailServers/LikeHub/obj/src/main.o",
+            "src/main.cpp"
+        ],
+        "directory": "/home/makeos/NovaMail/NovaMailServers/LikeHub",
+        "file": "src/main.cpp"
+    },
+    {
+        "arguments": [
+            "g++-11",
+            "-c",
+            "-std=c++20",
+            "-Wall",
+            "-Wextra",
+            "-Wpedantic",
+            "-Werror",
+            "-I",
+            "/home/makeos/NovaMail/NovaMailServers/Smtp/../include",
+            "-I",
+            "/home/makeos/NovaMail/NovaMailServers/Smtp/include",
+            "-o",
+            "/home/makeos/NovaMail/NovaMailServers/Smtp/obj//home/makeos/NovaMail/NovaMailServers/Smtp/src/Transaction.o",
+            "src/Transaction.cpp"
+        ],
+        "directory": "/home/makeos/NovaMail/NovaMailServers/Smtp",
+        "file": "src/Transaction.cpp"
+    },
+    {
+        "arguments": [
+            "g++-11",
+            "-c",
+            "-std=c++20",
+            "-Wall",
+            "-Wextra",
+            "-Wpedantic",
+            "-Werror",
+            "-I",
+            "/home/makeos/NovaMail/NovaMailServers/LikeHub/../include",
+            "-I",
+            "/home/makeos/NovaMail/NovaMailServers/LikeHub/include",
+            "-o",
+            "/home/makeos/NovaMail/NovaMailServers/LikeHub/obj/src/LikeHubSDK/database/DataBasePool.o",
+            "src/LikeHubSDK/database/DataBasePool.cpp"
+        ],
+        "directory": "/home/makeos/NovaMail/NovaMailServers/LikeHub",
+        "file": "src/LikeHubSDK/database/DataBasePool.cpp"
+    },
+    {
+        "arguments": [
+            "g++-11",
+            "-c",
+            "-std=c++20",
+            "-Wall",
+            "-Wextra",
+            "-Wpedantic",
+            "-Werror",
+            "-I",
+            "/home/makeos/NovaMail/NovaMailServers/Smtp/../include",
+            "-I",
+            "/home/makeos/NovaMail/NovaMailServers/Smtp/include",
+            "-o",
+            "/home/makeos/NovaMail/NovaMailServers/Smtp/obj//home/makeos/NovaMail/NovaMailServers/Smtp/src/Session.o",
+            "src/Session.cpp"
+        ],
+        "directory": "/home/makeos/NovaMail/NovaMailServers/Smtp",
+        "file": "src/Session.cpp"
+    },
+    {
+        "arguments": [
+            "g++-11",
+            "-c",
+            "-std=c++20",
+            "-Wall",
+            "-Wextra",
+            "-Wpedantic",
+            "-Werror",
+            "-I",
+            "/home/makeos/NovaMail/NovaMailServers/LikeHub/../include",
+            "-I",
+            "/home/makeos/NovaMail/NovaMailServers/LikeHub/include",
+            "-o",
+            "/home/makeos/NovaMail/NovaMailServers/LikeHub/obj/src/LikeHubSDK/database/DataBaseConnection.o",
+            "src/LikeHubSDK/database/DataBaseConnection.cpp"
+        ],
+        "directory": "/home/makeos/NovaMail/NovaMailServers/LikeHub",
+        "file": "src/LikeHubSDK/database/DataBaseConnection.cpp"
+    },
+    {
+        "arguments": [
+            "g++-11",
+            "-c",
+            "-std=c++20",
+            "-Wall",
+            "-Wextra",
+            "-Wpedantic",
+            "-Werror",
+            "-I",
+            "/home/makeos/NovaMail/NovaMailServers/LikeHub/../include",
+            "-I",
+            "/home/makeos/NovaMail/NovaMailServers/LikeHub/include",
+            "-o",
+            "/home/makeos/NovaMail/NovaMailServers/LikeHub/obj/src/LikeHubSDK/LikeHubConfig.o",
+            "src/LikeHubSDK/LikeHubConfig.cpp"
+        ],
+        "directory": "/home/makeos/NovaMail/NovaMailServers/LikeHub",
+        "file": "src/LikeHubSDK/LikeHubConfig.cpp"
+    }
+]
