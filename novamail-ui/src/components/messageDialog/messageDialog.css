@@ -304,6 +304,9 @@
     cursor: pointer;
     transition: .3s all;
 }
+.dialogFooterButton.disabled {
+    color: rgba(180, 180, 180, 1);
+}
 .dialogFooterButton:hover {
     background-color: rgba(200, 200, 200, .15);
 }
@@ -338,6 +341,7 @@
     height: 45%;
     background-color: rgba(200, 200, 200, 1);
     display: flex;
+    flex-shrink: 0;
     justify-content: center;
     align-items: center;
 }

@@ -1,8 +1,9 @@
 # 工程根目录（绝对路径，末尾带 /）
 ROOT := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 
-# 你有哪些子工程就列哪些
-SUBPROJECTS := LikeHub Smtp
+# 子工程
+SUBPROJECTS := LikeHub Smtp Imap Classification
+# SUBPROJECTS := Imap
 
 # 顶层输出目录
 OUT_BIN_DIR := $(ROOT)bin
@@ -73,4 +74,4 @@ build:
 	@command -v bear >/dev/null 2>&1 || { echo "bear not found. Install: sudo apt install bear"; exit 1; }
 	@rm -f $(ROOT)compile_commands.json
 	@echo "==> generating compile_commands.json via bear (top-level)"
-	@bear -o $(ROOT)compile_commands.json $(MAKE) --no-print-directory all
+	bear --output $(ROOT)compile_commands.json -- $(MAKE) --no-print-directory all

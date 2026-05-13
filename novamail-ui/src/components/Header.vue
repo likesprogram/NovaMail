@@ -12,14 +12,14 @@
         <div class="searchBox" ref="searchBox">
             <div class="search" v-if="!hideSearch" :class="{ 'searchClearShown': (searchText && searchText.length > 0) }" @click="showSearchPanel">
                 <div class="searchInput">
-                    <input type="text" ref="searchInput" v-model="searchText" placeholder="请输入搜索内容" />
+                    <input type="text" ref="searchInput" v-model="searchText" @keydown.enter.prevent="doSearch" placeholder="请输入搜索内容" />
                     <!-- 清空图标 -->
                     <div v-if="searchText && searchText.length > 0"
                         class="searchClear iconfont icon-likesprogramcancel"
                     @click="searchClear" @mousedown="blurFromInternal = true"></div>
                 </div>
                 <!-- 搜索图标 -->
-                <div class="searchButton iconfont icon-likesprogramchaxun"></div>
+                <div class="searchButton iconfont icon-likesprogramchaxun" @click.stop="doSearch"></div>
             </div>
             <div class="minSearch" :class="{ 'searchPanelShown': searchPanelShown }" v-else>
                 <div class="iconfont icon-likesprogramchaxun"></div>
@@ -27,22 +27,74 @@
                 
             <!-- 搜索提示面板 -->
             <SafePopover ref="searchPanel" :NoBoxShadow="['all']" :Width="'95%'">
-                <div class="searchPanel">这是一个安全弹窗</div>
+                <div class="searchPanel">
+                    <div v-if="searchLoading" class="searchState">正在搜索...</div>
+                    <div v-else-if="!searchText" class="searchState">输入主题、发件人或邮箱地址进行搜索</div>
+                    <div v-else-if="searchSuggestions.length === 0" class="searchState">暂无匹配结果</div>
+                    <div v-else v-for="item in searchSuggestions" :key="item.type + '-' + item.id" class="searchSuggestItem"
+                    @click.stop
+                    @mousedown.prevent="selectSuggestion(item)">
+                        <div class="suggestSub" v-if="item.subText">{{ item.subText }}</div>
+                        <div class="suggestText">{{ item.text }}</div>
+                    </div>
+                </div>
             </SafePopover>
         </div>
         <!-- 占位 -->
         <div class="placeholder"></div>
         <!-- 用户信息 -->
-        <div class="userInfo" ref="userInfoButton" @click="showUserInfoPanel">
+        <div class="userInformation" ref="userInfoButton" @click="showUserInfoPanel">
             <div class="avatar">
-                <img src="@assets/avatar.png" alt="avatar"></img>
+                <img v-if="userStore.isLogin" :src="userStore.avatarUrl" alt="avatar"></img>
+                <img v-else src="@assets/avatar.png" alt="avatar"></img>
             </div>
-            <div class="name">{{ "新星邮局" }}</div>
-            <div class="email">{{ "novamail@lby.email" }}</div>
+            <div class="name">{{ userStore.isLogin ? userStore.nickname : "未登录" }}</div>
+            <div class="email" v-if="userStore.isLogin">{{ userStore.mailBoxView }}</div>
             
-            <!-- 搜索提示面板 -->
+            <!-- 用户信息面板 -->
             <SafePopover ref="userInfoPanel" :NoBoxShadow="['all']" :Width="'95%'">
-                <div class="searchPanel">这是一个安全弹窗</div>
+                <div class="userInfoPanel">
+                    <div class="userInfo">
+                        <div class="nickname">
+                            <span class="nameText">{{ userStore.nickname }}</span>
+                            <span class="label" :class="userStore.isAdmin ? 'admin' : 'user'">
+                                {{ userStore.isAdmin ? "管理员" : "普通用户" }}
+                            </span>
+                        </div>
+                        <div class="mailBox">
+                            <span class="mailBoxText">{{ userStore.mailBoxView }}</span>
+                            <span
+                                v-if="userStore.mailBoxView && userStore.mailBoxView != '无邮箱'" class="copyMailBox iconfont icon-likesprogramcopy"
+                                @click="copyMailBox"
+                            ></span>
+                        </div>
+                    </div>
+                    <div class="buttonList">
+                        <router-link class="button btn-text" to="/settings/users">
+                            <span class="iconfont icon-likesprogramyonghu"></span>
+                            个人资料
+                        </router-link>
+                        <router-link class="button btn-text" to="/settings/mail">
+                            <span class="iconfont icon-likesprogramyoujian"></span>
+                            邮箱管理
+                        </router-link>
+                        <router-link class="button btn-text" to="/files">
+                            <span class="iconfont icon-likesprogramwenzhang"></span>
+                            文件管理
+                        </router-link>
+                    </div>
+                    <div class="bottom">
+                        <router-link v-if="userStore.isAdmin" class="button btn-text" to="/settings/system">
+                            <span class="iconfont icon-likesprogramjiaoseguanli"></span>
+                            系统管理
+                        </router-link>
+                        <span v-else><!-- 占位符 --></span>
+                        <button class="btn-text" @click="AuthService.logout()">
+                            <span class="iconfont icon-likesprogramtuichudenglu"></span>
+                            退出
+                        </button>
+                    </div>
+                </div>
             </SafePopover>
         </div>
         <!-- 设置按钮 -->
@@ -51,24 +103,38 @@
             <span class="title">设置</span>
             <div class="settingsPanelBox panelBox"></div>
         </router-link>
+        <!-- 消息提示 -->
+        <ShowMessage ref="showMessage"/>
     </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, nextTick, ref, getCurrentInstance } from 'vue';
+import { defineComponent, nextTick, ref, getCurrentInstance, watch, onBeforeUnmount } from 'vue';
+import { AuthService } from '@service/AuthService';
+import { UserStore } from '@store/UserStore';
+import { Email, type SearchSuggestion } from '@api/email/Email';
+import ShowMessage from '@components/messageDialog/ShowMessage.vue';
+import SafePopover from '@components/SafePopover.vue';
+import { useRouter } from 'vue-router';
+
 export default defineComponent({
     name: 'Header',
 });
 </script>
 
 <script setup lang="ts">
-import SafePopover from '@components/SafePopover.vue';
-
 const instance = getCurrentInstance();
 const title = instance?.appContext.config.globalProperties.$title || '新星邮箱';
 const subtitle = instance?.appContext.config.globalProperties.$subtitle || 'NovaMail';
 
-// 搜索框相关
+const router = useRouter();
+
+// 用户
+const userStore = UserStore();
+
+// 对话框实例
+const showMessage = ref<InstanceType<typeof ShowMessage>>();
+
 // 搜索框
 const searchBox = ref<HTMLElement | null>(null);
 // 搜索输入框
@@ -83,17 +149,124 @@ const blurFromInternal = ref(false);
 const hideSearch = ref(false);
 // 是否显示搜索面板
 const searchPanelShown = ref(false);
+const searchLoading = ref(false);
+const searchSuggestions = ref<SearchSuggestion[]>([]);
 // 清空搜索内容
 const searchClear = () => {
     searchText.value = "";
+    searchSuggestions.value = [];
     nextTick(() => {
         searchInput.value?.focus();
+        showSearchPanel();
     });
 }
 // 显示搜索面板
 const showSearchPanel = () => {
     searchPanel.value?.show(searchBox.value as HTMLElement);
 }
+const hideSearchPanel = () => {
+    searchPanelShown.value = false;
+    searchPanel.value?.hide?.();
+};
+
+let searchTimer: number | undefined;
+let requestSeq = 0;
+
+const getSearchSuggestions = async (keyword: string): Promise<SearchSuggestion[]> => {
+    try {
+        const response = await Email.getSearchSuggestions(keyword);
+        showSearchPanel();
+        return response.data;
+    } catch (error) {
+        setTimeout(() => {
+            showMessage.value?.ShowModal("搜索失败", ["搜索内容获取失败，是否重试"], "failure", (selectedButtonIndex) => {
+                if(selectedButtonIndex === 1) getSearchSuggestions(keyword);
+            });
+        }, 300);
+        return [];
+    }
+}
+
+watch(searchText, (value) => {
+    const keyword = value.trim();
+
+    if (searchTimer) {
+        clearTimeout(searchTimer);
+    }
+
+    if (!keyword) {
+        searchSuggestions.value = [];
+        searchLoading.value = false;
+        return;
+    }
+
+    searchTimer = window.setTimeout(async () => {
+        const currentSeq = ++requestSeq;
+
+        try {
+            searchLoading.value = true;
+
+            const result = await getSearchSuggestions(keyword);
+
+            // 防止旧请求覆盖新结果
+            if (currentSeq !== requestSeq) return;
+
+            searchSuggestions.value = result;
+            showSearchPanel();
+        } catch (error) {
+            if (currentSeq !== requestSeq) return;
+            searchSuggestions.value = [];
+            console.error('搜索提示获取失败:', error);
+        } finally {
+            if (currentSeq === requestSeq) {
+                searchLoading.value = false;
+            }
+        }
+    }, 300);
+});
+const selectSuggestion = (item: SearchSuggestion) => {
+    searchText.value = item.text;
+
+    // 如果点击的是具体邮件，可以直接进入详情
+    if (item.mappingId) {
+        hideSearchPanel();
+        router.replace({ name: 'inboxRead', params: { id: item.mappingId } });
+        return;
+    }
+
+    // 否则执行搜索
+    doSearch();
+};
+const doSearch = () => {
+    const keyword = searchText.value.trim();
+    if (!keyword) return;
+
+    hideSearchPanel();
+
+    // 这里换成你自己的邮件列表搜索逻辑
+    // searchMailList(keyword);
+};
+
+const getSuggestionTypeName = (type: SearchSuggestion['type']) => {
+    switch (type) {
+        case 'subject':
+            return '主题';
+        case 'sender':
+            return '发件人';
+        case 'email':
+            return '邮箱';
+        case 'keyword':
+            return '关键词';
+        default:
+            return '搜索';
+    }
+};
+
+onBeforeUnmount(() => {
+    if (searchTimer) {
+        clearTimeout(searchTimer);
+    }
+});
 
 // 用户信息相关
 const userInfoButton = ref<HTMLElement | null>(null);
@@ -102,6 +275,14 @@ const userInfoPanel = ref<InstanceType<typeof SafePopover> | null>(null);
 // 显示用户信息面板
 const showUserInfoPanel = () => {
     userInfoPanel.value?.show(userInfoButton.value as HTMLElement);
+}
+// 邮箱拷贝
+const copyMailBox = async () => {
+    try {
+        await navigator.clipboard.writeText(userStore.mailBoxView);
+    } catch (e) {
+        console.error(e);
+    }
 }
 </script>
 
@@ -255,8 +436,49 @@ const showUserInfoPanel = () => {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     background-color: var(--bg-primary);
+    overflow: hidden;
+    overflow-y: auto;
+}.header .searchPanel .searchState {
+    width: 100%;
+    height: 100%;
+    font-family: 'artisticFonts';
+    font-size: 16px;
+    color: var(--text-tertiary);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}.header .searchPanel .searchSuggestItem {
+    padding: 10px 0px;
+    width: 95%;
+    transition: all .3s;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    border-bottom: 1px solid var(--border-hover);
+    gap: 5px;
+}.header .searchPanel .searchSuggestItem:hover {
+    background-color: var(--bg-hover-primary);
+}.header .searchPanel .searchSuggestItem:active {
+    background-color: var(--bg-active-primary);
+}.header .searchPanel .searchSuggestItem:last-child {
+    border-bottom: none;
+}.header .searchPanel .searchSuggestItem .suggestSub,
+.header .searchPanel .searchSuggestItem .suggestText {
+    font-size: 14px;
+    /* 单行文本省略 */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}.header .searchPanel .searchSuggestItem .suggestSub {
+    max-width: 120px;
+    flex-shrink: 0;
+    font-weight: 700;
+    /* 单行文本省略 */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 /* 占位 */
@@ -265,8 +487,8 @@ const showUserInfoPanel = () => {
 }
 
 /* 用户信息 */
-.header .userInfo { 
-    max-width: 250px;
+.header .userInformation { 
+    width: 250px;
     height: 100%;
     flex-shrink: 0;
     padding: 0px 10px;
@@ -280,7 +502,7 @@ const showUserInfoPanel = () => {
     border-radius: 10px;
     position: relative;
 }
-.header .userInfo .avatar {
+.header .userInformation .avatar {
     width: 35px;
     height: 35px;
     border-radius: 50%;
@@ -288,11 +510,11 @@ const showUserInfoPanel = () => {
     flex-shrink: 0;
     background-color: var(--bg-primary);
 }
-.header .userInfo .avatar img { 
+.header .userInformation .avatar img { 
     width: 100%;
     height: 100%;
 }
-.header .userInfo .name {
+.header .userInformation .name {
     margin-left: 5px;
     font-size: 14px;
     font-weight: 700;
@@ -304,7 +526,7 @@ const showUserInfoPanel = () => {
     text-overflow: ellipsis;
     white-space: nowrap;
 }
-.header .userInfo .email {
+.header .userInformation .email {
     margin-left: 5px;
     font-size: 13px;
     flex: 1;
@@ -313,6 +535,105 @@ const showUserInfoPanel = () => {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+/* 用户信息面板 */
+.header .userInformation .userInfoPanel {
+    width: 100%;
+    padding: 10px;
+    cursor: default;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    background-color: var(--bg-primary);
+}
+/* 用户信息 */
+.header .userInformation .userInfoPanel .userInfo {
+    width: 100%;
+    gap: 2px;
+    padding: 0px 5px;
+    padding-bottom: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 1px solid var(--bg-active-primary);
+}
+/* 用户名称 */
+.header .userInformation .userInfoPanel .userInfo .nickname,
+.header .userInformation .userInfoPanel .userInfo .mailBox {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 5px;
+}
+.header .userInformation .userInfoPanel .userInfo .nickname .nameText,
+.header .userInformation .userInfoPanel .userInfo .mailBox .mailBoxText {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+    /* 单行文本省略 */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.header .userInformation .userInfoPanel .userInfo  .nickname .label {
+    padding: 4px 8px;
+    font-size: 12px;
+    border-radius: 5px;
+    flex-shrink: 0;
+    background-color: var(--bg-tertiary);
+}
+/* 用户邮箱 */
+.header .userInformation .userInfoPanel .userInfo .mailBox .mailBoxText {
+    color: var(--text-secondary2);
+    font-size: 12px;
+    font-weight: normal;
+}
+.header .userInformation .userInfoPanel .userInfo .mailBox .copyMailBox {
+    color: var(--text-secondary2);
+    padding: 2px;
+    border-radius: 5px;
+    font-size: 18px;
+    cursor: pointer;
+    font-weight: normal;
+    transition: all .3s;
+}
+.header .userInformation .userInfoPanel .userInfo .mailBox .copyMailBox:hover {
+    color: var(--text-secondary1);
+    background-color: var(--bg-hover-primary);
+}
+.header .userInformation .userInfoPanel .userInfo .mailBox .copyMailBox:active {
+    transition: all .1s;
+    background-color: var(--bg-active-primary);
+}
+/* 按钮列表 */
+.header .userInformation .userInfoPanel .buttonList {
+    width: 100%;
+    padding: 5px 0px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+}
+.header .userInformation .userInfoPanel .buttonList .button {
+    font-size: 14px;
+    width: 100%;
+    justify-content: flex-start;
+}.header .userInformation .userInfoPanel .buttonList .button .iconfont {
+    font-size: 18px;
+}
+/* 底部内容 */
+.header .userInformation .userInfoPanel .bottom {
+    font-size: 14px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}.header .userInformation .userInfoPanel .bottom .iconfont {
+    font-size: 18px;
 }
 
 /* 设置按钮 */
@@ -331,19 +652,23 @@ const showUserInfoPanel = () => {
     font-size: 14px;
     color: var(--text-secondary1);
 }
-.header .userInfo:hover,
+.header .userInformation:hover,
 .header .settings:hover { 
     background-color: var(--bg-hover-primary);
 }
-.header .userInfo:active,
+.header .userInformation:active,
 .header .settings:active { 
     transition: all .1s;
     background-color: var(--bg-active-primary);
 }
-.header .userInfo.router-link-active,
+.header .userInformation.router-link-active,
 .header .settings.router-link-active,
-.header .userInfo.router-link-exact-active,  
-.header .settings.router-link-exact-active { 
+.header .userInformation .userInfoPanel .buttonList .button.router-link-active,
+.header .userInformation .userInfoPanel .bottom .button.router-link-active,
+.header .userInformation.router-link-exact-active,
+.header .settings.router-link-exact-active,
+.header .userInformation .userInfoPanel .buttonList .button.router-link-exact-active,
+.header .userInformation .userInfoPanel .bottom .button.router-link-exact-active { 
     background-color: var(--bg-hover-primary);
 }
 .header .settings .iconfont {

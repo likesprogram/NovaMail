@@ -16,25 +16,25 @@ import java.io.IOException;
 @RestController
 @RequestMapping("/verification")
 public class VerificationCodeController {
-    private final VerificationCodeService verificationCode;
+    private final VerificationCodeService verificationCodeService;
 
     @Autowired
     public  VerificationCodeController(VerificationCodeService verificationCode) {
-        this.verificationCode = verificationCode;
+        this.verificationCodeService = verificationCode;
     }
 
     @PostMapping("/image")
     public ResponseResult<ImageCode> getImageCode() throws IOException, FontFormatException {
-        return verificationCode.getImageCode();
+        return verificationCodeService.getImageCode();
     }
 
     @PostMapping("/sms")
     public ResponseResult<String> sendSmsCode(@RequestBody SmsCode smsCode) {
         // 校验图片验证码
-        ResponseResult<String> imageCodeResult = verificationCode.checkImageCode(smsCode.getImageCode());
+        ResponseResult<String> imageCodeResult = verificationCodeService.checkImageCode(smsCode.getImageCode());
         if(imageCodeResult.getCode() != 200) return imageCodeResult;
 
         // 发送短信验证码
-        return verificationCode.sendSmsCode(smsCode.getPhoneNumber());
+        return verificationCodeService.sendSmsCode(smsCode.getPhoneNumber());
     }
 }

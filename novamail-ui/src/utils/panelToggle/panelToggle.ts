@@ -57,7 +57,6 @@ export class Panel {
     }
 
     /** 显示 Panel，可指定位置 */
-    /** 显示 Panel，可指定位置 */
     show(position?: Position) {
         if (this.state === 'shown' || this.state === 'showing') return;
         this.callbacks.onShow?.();

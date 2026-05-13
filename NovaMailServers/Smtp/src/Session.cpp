@@ -1,55 +1,119 @@
 #include <Session.hpp>
-#include <iostream>
+#include <Connection.hpp>
 #include <LikeHub/LikeHubConfig.hpp>
 #include <LikesProgram/log/Logger.hpp>
+#include <command/EhloCommand.hpp>
+#include <command/StartTlsCommand.hpp>
+#include <command/AuthCommand.hpp>
+#include <command/MailCommand.hpp>
+#include <command/RcptCommand.hpp>
+#include <command/DataCommand.hpp>
+#include <command/RsetCommand.hpp>
+#include <command/NoopCommand.hpp>
+#include <command/QuitCommand.hpp>
+#include <service/MailBoxService.hpp>
+#include <LikeHub/SecurityContextManager.hpp>
 
 namespace NovaMail {
     namespace Smtp {
-        Session::Session() {
+        Session::Session(Connection* connection, LikesProgram::Net::Address remoteAddr, LikesProgram::Net::Address localAddr)
+        : m_connection(connection), m_remoteAddr(remoteAddr), m_localAddr(localAddr) {
             // 获取配置
-            LikeHub::LikeHubConfig config = LikeHub::LikeHubConfig::Instance();
+            LikeHub::LikeHubConfig& config = LikeHub::LikeHubConfig::Instance();
             m_config = config.Raw();
 
+            // 获取服务名称
+            m_smtpHostname = m_config[u"smtp"][u"hostname"].AsString().ToStdString();
+
             // EHLO 广播支持
-            m_caps = Capabilities::PIPELINING | Capabilities::SIZE | Capabilities::EIGHT_BIT_MIME | Capabilities::ENHANCED_STATUS;
+            m_caps = Types::Capabilities::PIPELINING | Types::Capabilities::SIZE | Types::Capabilities::EIGHT_BIT_MIME;
+            if (m_config[u"smtp"][u"start_tls"].AsBool()) m_caps |= Types::Capabilities::STARTTLS;
+            if (m_config[u"smtp"][u"relay_policy"].AsBool()) { // 开启中继 必须完成登录认证 才能发送
+                m_relayPolicy = true;
+                m_caps |= Types::Capabilities::STARTTLS; // 开启登录前必须开启 TLS 通信
+                m_caps |= Types::Capabilities::AUTH | Types::Capabilities::AUTH_PLAIN | Types::Capabilities::AUTH_LOGIN;
+            }
 
             // 创建 Transaction
             size_t maxRcptCount = static_cast<size_t>(m_config[u"transaction"][u"maxRcptCount"].AsInt64());
             size_t maxDataBytes = static_cast<size_t>(m_config[u"transaction"][u"maxDataBytes"].AsInt64());
             bool dedupRcpt = m_config[u"transaction"][u"dedupRcpt"].AsBool();
             m_tx = Transaction(maxRcptCount, maxDataBytes, dedupRcpt);
+            InitHandlers();
 
             // 输出日志
             LogDebug(
-                u"Session created with maxRcptCount={}, maxDataBytes={}, dedupRcpt={}.",
+                u"Session created with maxRcptCount={}, maxDataBytes={}, dedupRcpt={}",
                 std::to_string(maxRcptCount),
                 std::to_string(maxDataBytes), dedupRcpt ? u"true" : u"false"
             );
         }
 
-        void Session::OnConnect(LikesProgram::Net::Buffer& out) {
-            std::string message = "220 ";
-            message.append(m_config[u"hostname"].AsString().ToStdString());
+        void Session::InitHandlers() {
+            m_handlers[static_cast<size_t>(Types::CommandVerb::EHLO)] = std::make_unique<EhloCommand>(
+                m_smtpHostname, m_config[u"smtp"][u"greeting"].AsString().ToStdString()
+            );
+            m_handlers[static_cast<size_t>(Types::CommandVerb::HELO)] = std::make_unique<EhloCommand>(
+                m_smtpHostname, m_config[u"smtp"][u"greeting"].AsString().ToStdString()
+            );
+            m_handlers[static_cast<size_t>(Types::CommandVerb::STARTTLS)] = std::make_unique<StartTlsCommand>();
+            m_handlers[static_cast<size_t>(Types::CommandVerb::AUTH)] = std::make_unique<AuthCommand>();
+            m_handlers[static_cast<size_t>(Types::CommandVerb::MAIL)] = std::make_unique<MailCommand>();
+            m_handlers[static_cast<size_t>(Types::CommandVerb::RCPT)] = std::make_unique<RcptCommand>();
+            m_handlers[static_cast<size_t>(Types::CommandVerb::DATA)] = std::make_unique<DataCommand>();
+
+            m_handlers[static_cast<size_t>(Types::CommandVerb::RSET)] = std::make_unique<RsetCommand>();
+            m_handlers[static_cast<size_t>(Types::CommandVerb::NOOP)] = std::make_unique<NoopCommand>();
+            m_handlers[static_cast<size_t>(Types::CommandVerb::QUIT)] = std::make_unique<QuitCommand>();
+        }
+
+        void Session::OnConnect() {
+            if (ShouldClose()) return;
+            std::string message = "";
+            message.append(m_config[u"smtp"][u"hostname"].AsString().ToStdString());
             message.append(" ");
-            message.append(m_config[u"greeting"].AsString().ToStdString());
-            message.append(".\r\n");
-            out.Append(message.c_str(), message.size());
-            m_state = State::Greeted; // 220 发送完成，等待 问候
+            message.append(m_config[u"smtp"][u"greeting"].AsString().ToStdString());
+            m_state = Types::State::Greeted;
 
             // 输出日志
             LogInfo(
-                u"SMTP client connected, server={}, greeting={}",
-                m_config[u"hostname"].AsString(),
-                m_config[u"greeting"].AsString()
+                u"SMTP connect: client={} -> server={}, hostname={}, greeting={}",
+                GetRemoteAddress().ToString(), GetLocalAddress().ToString(),
+                m_config[u"smtp"][u"hostname"].AsString(), m_config[u"smtp"][u"greeting"].AsString()
             );
+            Reply(Types::ReplyCode::ServiceReady, message);
         }
 
-        void Session::OnBytes(LikesProgram::Net::Buffer& in, LikesProgram::Net::Buffer& out) {
+        void Session::OnBytes(LikesProgram::Net::Buffer& in) {
             for (;;) {
-                if (m_state == State::DataReceiving) {
-                    if (!PumpData(in, out)) break;   // 返回 false 表示需要更多数据
-                    // 判断是否结束
-                    continue;                        // data 完成后继续处理可能的 pipeline 命令
+                if (ShouldClose()) return;
+                auto self = weak_from_this().lock();
+                if (!self) return;
+                if (m_state == Types::State::DataReceiving || m_state == Types::State::BdatReceiving) {
+                    // 查找 数据 处理器
+                    auto& handler = m_handlers[static_cast<size_t>(
+                        m_state == Types::State::DataReceiving ? Types::CommandVerb::DATA : Types::CommandVerb::BDAT
+                    )];
+
+                    if (!handler) {
+                        LogWarn(
+                            u"SMTP data handler missing (verb={})",
+                            std::string(m_state == Types::State::DataReceiving ? "DATA" : "BDAT")
+                        );
+                        Reply(Types::ReplyCode::NotImplemented, "Command not implemented");
+                        return;
+                    }
+
+                    auto result = handler->InputData(self, in); // 接受 邮件数据
+                    switch (result) {
+                        case CommandHandler::DataResult::NeedMoreData: return; // 继续等待数据
+                        case CommandHandler::DataResult::ChunkFinished: // BDAT chunk 完成，但事务未结束
+                            SetState(Types::State::RcptCollecting); break;
+                        case CommandHandler::DataResult::TransactionFinished: {
+                            m_tx.Reset(false); // 保留 Ehlo Domain
+                            SetState(Types::State::Identified); break;
+                        }
+                    }
                 }
 
                 // 尝试解析指令
@@ -57,307 +121,93 @@ namespace NovaMail {
                 if (!cmd) break;                     // 没有完整命令行
 
                 // 派遣指令处理
-                Dispatch(*cmd, out);
+                Dispatch(*cmd);
 
                 // 已关闭
                 if (m_shouldClose) break;
             }
         }
 
-        bool Session::ShouldClose() const noexcept { 
-            return m_shouldClose; 
+        bool Session::ShouldClose(bool value, bool set) noexcept {
+            if (set) m_shouldClose.store(value, std::memory_order_release);
+            return m_shouldClose.load(std::memory_order_acquire);
         }
 
-        void Session::OnEhlo(const Command& command, LikesProgram::Net::Buffer& out) {
-            (void)command;
-            std::string message = "250-";
-            message.append(m_config[u"hostname"].AsString().ToStdString());
-            message.append(" ");
-            message.append(m_config[u"greeting"].AsString().ToStdString());
-            message.append("\r\n");
-            if (m_caps != Capabilities::None) {
-                // if((m_caps & Capabilities::ESMTP) != Capabilities::None) {
-                //     message.append("250-ESMTP\r\n");
-                // }
-                if((m_caps & Capabilities::PIPELINING) != Capabilities::None) {
-                    message.append("250-PIPELINING\r\n");
-                }
-                if((m_caps & Capabilities::SIZE) != Capabilities::None) {
-                    message.append("250-SIZE ");
-                    message.append(m_config[u"transaction"][u"maxDataBytes"].AsString().ToStdString());
-                    message.append("\r\n");
-                }
-                if ((m_caps & Capabilities::ENHANCED_STATUS) != Capabilities::None) {
-                    message.append("250-ENHANCEDSTATUSCODES\r\n");
-                }
-                if ((m_caps & Capabilities::DSN) != Capabilities::None) {
-                    message.append("250-DSN\r\n");
-                }
-                if((m_caps & Capabilities::STARTTLS) != Capabilities::None && !m_isTLS) {
-                    message.append("250-STARTTLS\r\n");
-                }
-                if ((m_caps & Capabilities::AUTH) != Capabilities::None) {
-                    message.append("250-AUTH");
-                    if ((m_caps & Capabilities::AUTH_PLAIN) != Capabilities::None) message.append(" PLAIN");
-                    if ((m_caps & Capabilities::AUTH_LOGIN) != Capabilities::None) message.append(" LOGIN");
-                    if ((m_caps & Capabilities::AUTH_CRAM_MD5) != Capabilities::None) message.append(" CRAM-MD5");
-                    message.append("\r\n");
-                }
-                if ((m_caps & Capabilities::EIGHT_BIT_MIME) != Capabilities::None) {
-                    message.append("250-8BITMIME\r\n");
-                }
-                // if ((m_caps & Capabilities::BINARY_MIME) != Capabilities::None) {
-                //     message.append("250-BINARYMIME\r\n");
-                //     message.append("250-CHUNKING\r\n");
-                // }
-                if ((m_caps & Capabilities::SMTP_UTF8) != Capabilities::None) {
-                    message.append("250-SMTPUTF8\r\n");
-                }
-                // if ((m_caps & Capabilities::VRFY) != Capabilities::None) {
-                //     message.append("250-VRFY\r\n");
-                // }
-                // if ((m_caps & Capabilities::EXPN) != Capabilities::None) {
-                //     message.append("250-EXPN\r\n");
-                // }
-                if ((m_caps & Capabilities::HELP) != Capabilities::None) {
-                    message.append("250-HELP\r\n");
-                }
+        void Session::Reply(Types::ReplyCode code, const std::string& message, const std::string& hyphen) {
+            if (ShouldClose()) return;
+            std::string messageOut = std::to_string(static_cast<int>(code)) + hyphen + message + "\r\n";
+            if (m_connection) {
+                m_connection->Send(messageOut.c_str(), messageOut.size());
+                return;
             }
 
-            // 记录 EHLO 参数（客户端域名）
-            if (command.Params().size() > 0 && command.Params().front().values.size() > 0)
-                m_tx.SetEhloDomain(command.Params().front().values.front().text);
-
-            // 回复 250，EHLO 完成
-            message.append("250 OK\r\n");
-            m_state = State::Identified; // EHLO/HELO 完成
-            out.Append(message.c_str(), message.size());
-
-            // 输出日志
-            LogInfo(
-                u"EHLO from clientDomain={}",
+            LogError(
+                u"SMTP reply failed: connection is null (code={} message='{}' state={} ehloDomain={})",
+                std::to_string(static_cast<int>(code)), message, std::to_string(static_cast<int>(m_state)),
                 m_tx.HasEhloDomain() ? std::string(m_tx.EhloDomain()) : std::string("unknown")
             );
-            LogDebug(
-                u"SMTP capabilities advertised: PIPELINING={} SIZE={} 8BITMIME={}",
-                (m_caps & Capabilities::PIPELINING) != Capabilities::None,
-                (m_caps & Capabilities::SIZE) != Capabilities::None,
-                (m_caps & Capabilities::EIGHT_BIT_MIME) != Capabilities::None
-            );
         }
 
-        void Session::OnMail(const Command& command, LikesProgram::Net::Buffer& out) {
-            // DATA 阶段不能开始新事务
-            if (m_state == State::DataReceiving) {
-                Reply503(out);
-                LogError(u"Received MAIL command during DATA receiving phase.");
-                return;
-            }
-
-            // 未完成问候/识别
-            if (m_state == State::Connected || m_state == State::Greeted) {
-                Reply503(out);
-                LogWarn(u"Received MAIL command before EHLO/HELO.");
-                return;
-            }
-
-            // 允许开始/覆盖一个新的事务：隐式 RSET
-            if (command.Params().size() > 0 && command.Params().front().values.size() > 0) {
-                m_tx.SetMailFrom(command.Params().front().values.front().text);
-            } else {
-                Reply501(out);
-                LogError(u"MAIL command missing FROM parameter, command line: {}", std::string(command.RawLine()));
-                return;
-            }
-
-            m_state = State::MailStarted; // 切换状态
-            static constexpr char kOk[] = "250 Ok\r\n";
-            out.Append(kOk, sizeof(kOk) - 1);
-
-            // 输出日志
-            LogInfo(
-                u"MAIL FROM accepted: {}",
-                std::string(m_tx.MailFrom())
-            );
+        void Session::SetState(Types::State state) {
+            m_state = state;
         }
 
-        void Session::OnRcpt(const Command& command, LikesProgram::Net::Buffer& out) {
-            // DATA 阶段不能开始新事务
-            if (m_state == State::DataReceiving) {
-                Reply503(out);
-                LogError(u"Received RCPT command during DATA receiving phase.");
-                return;
-            }
+        Types::State Session::GetState() {
+            return m_state;
+        }
+
+        void Session::StartTls() {
+            if (!m_connection) return;
         
-            // 未完成问候/识别/未完成 MAIL
-            if (m_state == State::Connected || m_state == State::Greeted || m_state == State::Identified) {
-                Reply503(out);
-                LogWarn(u"Received RCPT command before EHLO/HELO or MAIL FROM.");
-                return;
-            }
+            m_connection->StartTlsAfterWriteComplete(LikeHub::SecurityContextManager::Instance().GetServerContext("lby.email"));
         
-            // 记录 RCPT 参数（收件人地址）
-            if (command.Params().size() > 0 && command.Params().front().values.size() > 0) {
-                std::string_view rcpt = command.Params().front().values.front().text;
-                if (!m_tx.AddRcptTo(rcpt)) {
-                    Reply501(out);
-                    if (m_tx.RcptCount() >= m_tx.MaxRcptCount()) LogWarn(u"RCPT command exceeds maximum recipient count {}, command line: {}", std::to_string(m_tx.MaxRcptCount()), std::string(command.RawLine()));
-                    if (rcpt.empty()) LogError(u"RCPT command has empty TO parameter, command line: {}", std::string(command.RawLine()));
-                    else LogError(u"Failed to add RCPT TO address '{}', command line: {}", std::string(rcpt), std::string(command.RawLine()));
-                    return;
-                }
-
-                LogDebug(
-                    u"RCPT TO accepted: {} (total={})",
-                    std::string(rcpt),
-                    std::to_string(m_tx.RcptCount())
-                );
-            } else {
-                Reply501(out);
-                LogError(u"RCPT command missing TO parameter, command line: {}", std::string(command.RawLine()));
-                return;
-            }
+            m_isTLS = true;
         
-            m_state = State::RcptCollecting; // 切换状态
-            static constexpr char kOk[] = "250 Ok\r\n";
-            out.Append(kOk, sizeof(kOk) - 1);
+            // RFC3207:
+            // TLS 建立后必须重置 SMTP 会话状态
+            m_tx.Reset(true);
+        
+            SetState(Types::State::Connected);
         }
 
-        void Session::OnData(LikesProgram::Net::Buffer& out) {
-            // DATA 阶段不能开始新事务
-            if (m_state == State::DataReceiving) {
-                Reply503(out);
-                LogError(u"Received DATA command during DATA receiving phase.");
-                return;
-            }
-
-            // 未完成问候/识别/未完成 MAIL/未完成 RCPT
-            if (m_state == State::Connected || m_state == State::Greeted || m_state == State::Identified || m_state != State::RcptCollecting) {
-                Reply503(out);
-                LogWarn(u"Received DATA command before EHLO/HELO, MAIL FROM or RCPT TO.");
-                return;
-            }
-
-            static constexpr char k354[] = "354 End data with <CR><LF>.<CR><LF>\r\n";
-            out.Append(k354, sizeof(k354) - 1);
-
-            // 清空上一封邮件缓存
-            m_tx.ResetData();
-
-            m_state = State::DataReceiving;
-
-            std::string recipients;
-            for (const auto& rcpt : m_tx.RcptTos()) {
-                recipients.append(rcpt);
-                recipients.append(" ");
-                std::cout << "Recipient: " << rcpt << std::endl; // 输出收件人地址
-            }
-            LogInfo(
-                u"DATA begin: from={} rcptCount={} recipients: {}",
-                std::string(m_tx.MailFrom()),
-                std::to_string(m_tx.RcptCount()),
-                recipients.empty() ? std::string("none") : recipients
-            );
+        bool Session::IsTLS() {
+            return m_isTLS;
         }
 
-        void Session::OnRset(LikesProgram::Net::Buffer& out) {
-            m_tx.Reset(); // 清理缓存
-            if (m_state >= State::Identified) {
-                m_state = State::Identified;
-            } else {
-                m_state = State::Greeted; // 还没 EHLO
-            }
-            
-            static constexpr char kOut[] = "250 OK\r\n";
-            out.Append(kOut, sizeof(kOut) - 1);
+        Transaction& Session::GetTransaction() {
+            return m_tx;
         }
 
-        void Session::OnNoop(LikesProgram::Net::Buffer& out) {
-            static constexpr char kOut[] = "250 OK\r\n";
-            out.Append(kOut, sizeof(kOut) - 1);
+        Types::Capabilities Session::GetCapabilities() {
+            return m_caps;
         }
 
-        void Session::OnQuit(LikesProgram::Net::Buffer& out) {
-            static constexpr char kQuit[] = "221 Nova Mail Service closing transmission channel\r\n";
-            out.Append(kQuit, sizeof(kQuit) - 1);
-
-            LogInfo(
-                u"SMTP client quit: ehloDomain={}",
-                m_tx.HasEhloDomain() ? std::string(m_tx.EhloDomain()) : std::string("unknown")
-            );
-
-            m_shouldClose = true;
+        bool Session::RelayPolicy() const noexcept {
+            return m_relayPolicy;
         }
 
-        void Session::Reply500(LikesProgram::Net::Buffer& out) {
-            static constexpr char kOut[] = "500 Syntax error, command unrecognized.\r\n";
-            out.Append(kOut, sizeof(kOut) - 1);
+        void Session::SetUser(const Entity::User& user) {
+            if (user.Valid()) m_authUser = user;
+            else m_authUser.reset();
         }
 
-        void Session::Reply501(LikesProgram::Net::Buffer& out) {
-            static constexpr char kOut[] = "501 Syntax error in parameters.\r\n";
-            out.Append(kOut, sizeof(kOut) - 1);
+        bool Session::Authenticated() const noexcept {
+            return m_authUser.has_value();
+        }
+        const Entity::User* Session::GetUser() const noexcept {
+            return Authenticated() ? &*m_authUser : nullptr;
         }
 
-        void Session::Reply502(LikesProgram::Net::Buffer& out) {
-            static constexpr char kOut[] = "502 Command not implemented.\r\n";
-            out.Append(kOut, sizeof(kOut) - 1);
+        std::string Session::SmtpHostname() const noexcept {
+            return m_smtpHostname;
         }
 
-        void Session::Reply503(LikesProgram::Net::Buffer& out) {
-            static constexpr char kOut[] = "503 Bad sequence of commands.\r\n";
-            out.Append(kOut, sizeof(kOut) - 1);
+        const LikesProgram::Net::Address& Session::GetRemoteAddress() const noexcept {
+            return m_remoteAddr;
         }
-
-        void Session::HandleData(LikesProgram::Net::Buffer& in, LikesProgram::Net::Buffer& out) {
-            size_t consumeSize = 0;
-            bool exceed = m_tx.AppendData(in.Peek(), in.ReadableBytes(), consumeSize);
-            in.Consume(consumeSize); // 消费
-            if (!exceed) { // 超限
-                static constexpr char kErr[] = "552 Message size exceeds fixed maximum message size.\r\n";
-                out.Append(kErr, sizeof(kErr) - 1);
-                m_tx.Reset(); // 清除缓存
-                m_state = State::Identified;
-                LogWarn(
-                    u"SMTP message too large: size={} limit={}",
-                    std::to_string(m_tx.DataBytes()),
-                    std::to_string(m_tx.MaxDataBytes())
-                );
-                return;
-            }
-
-            if (m_tx.IsDataComplete()) {
-                static constexpr char kErr[] = "250 OK\r\n";
-                out.Append(kErr, sizeof(kErr) - 1);
-                m_state = State::DataReceiptCompleted; // 测试状态
-                
-                LikesProgram::Net::Buffer& mailData = m_tx.Data();
-
-                LogInfo(
-                    u"SMTP message received: from={} rcptCount={} size={}",
-                    std::string(m_tx.MailFrom()),
-                    std::to_string(m_tx.RcptCount()),
-                    std::to_string(m_tx.DataBytes())
-                );
-
-                LogTrace(u"SMTP raw message size={}", std::to_string(mailData.ReadableBytes()));
-                
-                // 测试
-                // std::cout << std::string_view(reinterpret_cast<const char*>(mailData.Peek()), mailData.ReadableBytes()) << std::endl;
-            }
-
-            /* TODO :
-                1、验证 DKIM (数据库中 "来源" 字段需要)
-                2、规范化邮件 (添加Message-ID、添加 X-Internal-ID等)
-                5、保存到文件服务器 (MinIO)
-                6、写入数据库
-            */
-        }
-
-        bool Session::PumpData(Buffer& in, Buffer& out) {
-            HandleData(in, out);
-            if (m_state == State::DataReceiving) return false; // 需要更多数据
-            return true; // data 已完成（成功/失败），可继续解析下一条命令
+        
+        const LikesProgram::Net::Address& Session::GetLocalAddress() const noexcept {
+            return m_localAddr;
         }
         
         std::optional<Command> Session::TryParseCommand(LikesProgram::Net::Buffer& in) {
@@ -366,20 +216,51 @@ namespace NovaMail {
             return outCommand;
         }
 
-        void Session::Dispatch(const Command& command, LikesProgram::Net::Buffer& out) {
-            LogDebug(u"SMTP command received: {}", std::string(command.RawLine()));
-            switch (command.Verb()) {
-                case CommandVerb::EHLO:
-                case CommandVerb::HELO: OnEhlo(command, out); break;
-                case CommandVerb::MAIL: OnMail(command, out); break;
-                case CommandVerb::RCPT: OnRcpt(command, out); break;
-                case CommandVerb::DATA: OnData(out); break;
-                case CommandVerb::RSET: OnRset(out); break;
-                case CommandVerb::NOOP: OnNoop(out); break;
-                case CommandVerb::QUIT: OnQuit(out); break;
-                case CommandVerb::Unknown: Reply500(out); break; // 不认识
-                default: Reply502(out); break; // 认识但是不支持
+        void Session::Dispatch(const Command& command) {
+            auto self = weak_from_this().lock();
+            if (!self) return;
+
+            if (m_state == Types::State::Authenticated) { // 正在认证，直接将指令派发给 AuthCommand
+                auto& handler = m_handlers[static_cast<size_t>(Types::CommandVerb::AUTH)];
+                if (!handler) {
+                    LogError(
+                        u"SMTP AUTH handler missing while authentication is in progress, command line: {}",
+                        std::string(command.RawLine())
+                    );
+                    Reply(Types::ReplyCode::AuthServiceUnavailable, "Authentication service unavailable");
+                    return;
+                }
+                auto* authHandler = dynamic_cast<AuthCommand*>(handler.get());
+                if (!authHandler) {
+                    LogError(
+                        u"SMTP AUTH handler type mismatch while authentication is in progress, command line: {}", std::string(command.RawLine())
+                    );
+                    Reply(Types::ReplyCode::AuthServiceUnavailable, "Authentication service unavailable");
+                    return;
+                }
+                authHandler->HandleAuthLine(self, std::string(command.RawLine()));
+                return;
             }
+
+            Types::CommandVerb verb = command.Verb(); // 获取指令动词
+            // 不认识该指令
+            if (verb == Types::CommandVerb::COUNT || verb == Types::CommandVerb::Unknown) {
+                LogWarn(u"Unknown SMTP command received: '{}'", std::string(command.RawLine()));
+                Reply(Types::ReplyCode::SyntaxError, "Syntax error, command unrecognized");
+                return;
+            }
+
+            auto& handler = m_handlers[static_cast<size_t>(verb)];
+
+            // 服务器认识，但未实现 (没有处理类)
+            if (!handler) {
+                LogWarn(u"SMTP command not implemented: '{}'", std::string(command.RawLine()));
+                Reply(Types::ReplyCode::NotImplemented, "Command not implemented");
+                return;
+            }
+
+            // 执行处理
+            handler->Handle(self, command);
         }
     }
 }

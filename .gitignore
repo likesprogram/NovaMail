@@ -1,2 +1,32 @@
-/BertMailClass
-/Dependencies
+### NovaMailServers build outputs ###
+NovaMailServers/bin/
+NovaMailServers/lib/
+NovaMailServers/**/bin/
+NovaMailServers/**/obj/
+NovaMailServers/**/logs/
+
+### Native build artifacts ###
+*.o
+*.d
+*.a
+*.so
+*.so.*
+*.out
+*.dll
+*.exe
+*.lib
+*.pdb
+
+### Configuration ###
+**/Configuration.json
+
+### generated / model data ###
+**/models/**
+**/data/**
+**/results/**
+
+### Python cache ###
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class

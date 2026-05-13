@@ -7,6 +7,11 @@
 <script lang="ts">
 import { ref, onMounted, onBeforeUnmount, defineComponent } from 'vue';
 import { Panel } from '@/utils/panelToggle/panelToggle';
+
+export type PopoverPlacement = 'Top' | 'Bottom'
+    | 'Top,Left' | 'Top,Center' | 'Top,Right'
+    | 'Bottom,Left' | 'Bottom,Center' | 'Bottom,Right';
+
 export default defineComponent({
     name: 'SafePopover',
 });
@@ -25,11 +30,13 @@ const props = withDefaults(defineProps<{
     BorderRadius?: number,
     Width?: boolean | string,
     Height?: boolean | string,
+    Placement?: PopoverPlacement
 }>(), {
     NoBoxShadow: () => [],
     BorderRadius: 5,
     Width: false,
     Height: false,
+    Placement: 'Bottom,Center'
 });
 
 /**
@@ -62,11 +69,52 @@ const show = (parent: HTMLElement, ...safeEls: HTMLElement[]) => {
     }
 
     // 相对 parent 自动定位
-    panel.show({ top: '100%', left: '50%', transform: 'translateX(-50%)' });
+    const style = getPlacementStyle(props.Placement)
+    panel.show(style);
 
     // 防止透明度动画残留
     contentRef.value.style.display = 'block';
 };
+
+// 方向与对齐判定
+const getPlacementStyle = (placement: PopoverPlacement) => {
+    const [mainRaw, alignRaw] = placement.split(',');
+
+    const main = mainRaw || 'Bottom';
+
+    let align = alignRaw;
+
+    // 兼容旧写法：Top / Bottom
+    if (!align) align = 'Center';
+
+    const style: Record<string, string> = {};
+    switch (main) {
+        case 'Top':
+            style.bottom = '100%';
+            if (align === 'Left') {
+                style.left = '0';
+            } else if (align === 'Right') {
+                style.right = '0';
+            } else {
+                style.left = '50%';
+                style.transform = 'translateX(-50%)';
+            }
+        break;
+        case 'Bottom':
+            style.top = '100%';
+            if (align === 'Left') {
+                style.left = '0';
+            } else if (align === 'Right') {
+                style.right = '0';
+            } else {
+                style.left = '50%';
+                style.transform = 'translateX(-50%)';
+            }
+        break;
+    }
+
+    return style
+}
 
 /** 更新宽高逻辑 */
 const updateSize = () => {

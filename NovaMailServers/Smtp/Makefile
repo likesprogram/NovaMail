@@ -8,15 +8,34 @@ INCLUDE_DIR = -I $(MAKEFILE_DIR)../include
 INCLUDE_DIR += -I $(MAKEFILE_DIR)include
 
 # 链接选项
-LDLIBS = $(MAKEFILE_DIR)../lib/libLikesProgramStatic.a
+LDLIBS = -Wl,--start-group
+LDLIBS += $(MAKEFILE_DIR)../lib/libLikesProgramStatic.a
 LDLIBS += $(MAKEFILE_DIR)../lib/libLikeHubStatic.a
 LDLIBS += $(MAKEFILE_DIR)../lib/libmysqlcppconnx-static.a
-LDLIBS += -lssl -lcrypto -lresolv -lpthread
+LDLIBS += $(MAKEFILE_DIR)../lib/libaws-c-auth.a
+LDLIBS += $(MAKEFILE_DIR)../lib/libaws-c-cal.a
+LDLIBS += $(MAKEFILE_DIR)../lib/libaws-c-common.a
+LDLIBS += $(MAKEFILE_DIR)../lib/libaws-c-compression.a
+LDLIBS += $(MAKEFILE_DIR)../lib/libaws-c-event-stream.a
+LDLIBS += $(MAKEFILE_DIR)../lib/libaws-c-http.a
+LDLIBS += $(MAKEFILE_DIR)../lib/libaws-c-io.a
+LDLIBS += $(MAKEFILE_DIR)../lib/libaws-c-mqtt.a
+LDLIBS += $(MAKEFILE_DIR)../lib/libaws-c-s3.a
+LDLIBS += $(MAKEFILE_DIR)../lib/libaws-c-sdkutils.a
+LDLIBS += $(MAKEFILE_DIR)../lib/libaws-checksums.a
+LDLIBS += $(MAKEFILE_DIR)../lib/libaws-cpp-sdk-core.a
+LDLIBS += $(MAKEFILE_DIR)../lib/libaws-cpp-sdk-s3.a
+LDLIBS += $(MAKEFILE_DIR)../lib/libaws-crt-cpp.a
+LDLIBS += $(MAKEFILE_DIR)../lib/libs2n.a
+LDLIBS += -Wl,--end-group
+LDLIBS += -lcurl -lssl -lcrypto -lz -lresolv -lpthread -lrt -ldl
 
 # 编译选项
-CXX = g++-11
+CXX = g++-11 -O0 -fno-omit-frame-pointer
 CXXFLAGS = -std=c++20 -Wall -Wextra -Wpedantic -Werror
 CXXFLAGS += $(INCLUDE_DIR)
+# 自动生成依赖 .d
+CXXFLAGS += -MMD -MP
 
 # 递归找所有 .cpp
 SRCS := $(shell find $(SRC_DIRS) -type f -name '*.cpp')

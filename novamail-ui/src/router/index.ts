@@ -3,6 +3,7 @@ import type { App } from 'vue';
 import { MainRoutes } from '@/router/modules/MainRouter';
 import { createRouter, createWebHistory  } from 'vue-router';
 import { getCurrentInstance } from 'vue'
+import { userService } from '@service/UserService';
 
 const instance = getCurrentInstance();
 const title = instance?.appContext.config.globalProperties.$title || '新星邮箱';
@@ -27,25 +28,20 @@ export function resetRouter() {
 }
 
 // 路由前置守卫
-router.beforeEach((to: any, from, next) => {
-  // 判断是否需要登录后才可访问
-  //console.log('to.meta.requiresAuth:'+to.meta.requiresAuth)
-  if (to.meta.requiresAuth) {  // 如果页面需要先登录才能访问
-    if (true) { // 没有登录
-		console.log(from.path+'to:'+to.path+'   not Authen')
-        next({name:'login'})
-    } else if (to.path=='/'){ // 已经登录
-		console.log('to:'+to.path+'    Authen')
-		// let currentRole = SignUtil.getUserDetail()?.role
-		// if (currentRole=='admin'){
-		// 	next({name:'chief_index'})
-		// }
-    }else{
-		next()
+router.beforeEach(async (to: any, from, next) => {
+	// 判断是否需要登录后才可访问
+	if (to.meta.requiresAuth) {  // 如果页面需要先登录才能访问
+		if (userService.isLogin()) {
+			if (to.meta.requiresAdmin) {
+				if ((await userService.getUserInfo())?.isAdmin) next();  // 权限足够，放行
+				else next(false); // 权限不足，停留在当前页面
+			} else next();  // 没有权限要求，放行
+		} else {
+		    next({name:'login'}); // 未登录，跳到登录页
+		}
+	} else {
+		next();
 	}
-  }else{
-	  next()
-  }
 });
 
 // 路由后置守卫

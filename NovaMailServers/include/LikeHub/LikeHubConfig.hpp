@@ -10,6 +10,14 @@ namespace LikeHub {
     public:
         static LikeHubConfig& Instance(std::function <void(LikesProgram::Configuration&)> applyDefaultsIfMissing = nullptr);
 
+        // 禁止拷贝
+        LikeHubConfig(const LikeHubConfig&) = delete;
+        LikeHubConfig& operator=(const LikeHubConfig&) = delete;
+
+        // 禁止移动
+        LikeHubConfig(LikeHubConfig&&) = delete;
+        LikeHubConfig& operator=(LikeHubConfig&&) = delete;
+
         // 读取配置
         bool LoadConfig(std::string_view dir = "./", std::string_view file = "Configuration.json");
 

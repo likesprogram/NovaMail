@@ -9,4 +9,5 @@ import org.springframework.context.annotation.Configuration;
 @ConfigurationProperties(prefix = "spring.security")
 public class FilterProperties {
     private String[] allowedOrigins;
+    private String[] allowedWhiteList;
 }

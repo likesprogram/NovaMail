@@ -1,21 +1,33 @@
 #include <Connection.hpp>
 #include <LikesProgram/net/Server.hpp>
+#include <LikeHub/LikeHubClient.hpp>
+#include <LikesProgram/net/transports/TcpTransport.hpp>
 #include <LikesProgram/net/pollers/EpollPoller.hpp>
 #include <LikeHub/LikeHubConfig.hpp>
 #include <LikesProgram/log/Logger.hpp>
 #include <LikesProgram/log/sinks/ConsoleSink.hpp>
 #include <LikesProgram/log/sinks/FileSink.hpp>
-#include <LikeHub/database/DataBasePool.hpp>
+#include <LikeHub/storage/database/DatabasePool.hpp>
 #include <LikesProgram/time/Timer.hpp>
-#include <iostream>
+#include <service/MailBoxService.hpp>
+#include <LikeHub/storage/fileSystem/FileSystem.hpp>
+#include <LikeHub/storage/fileSystem/MinioClient.hpp>
+#include <LikeHub/SecurityContextManager.hpp>
+#include <MailDispatcher.hpp>
+#include <smtpClient/SmtpClient.hpp>
+#include <cstdlib>
+#include <memory>
 
 // 配置缺省值
 void ApplyConfigDefaultsIfMissing(LikesProgram::Configuration& config) {
-    // smtp
-    LikeHub::LikeHubConfig::EnsureKey(config, u"greeting", u"NovaMail SMTP Server");
-    LikeHub::LikeHubConfig::EnsureKey(config, u"hostname", u"smtp.lby.email");
+    // Smtp
+    LikeHub::LikeHubConfig::EnsureObject(config, u"smtp");
+    LikeHub::LikeHubConfig::EnsureKey(config[u"smtp"], u"greeting", u"NovaMail SMTP Server");
+    LikeHub::LikeHubConfig::EnsureKey(config[u"smtp"], u"hostname", u"smtp.lby.email");
+    LikeHub::LikeHubConfig::EnsureKey(config[u"smtp"], u"start_tls", false);
+    LikeHub::LikeHubConfig::EnsureKey(config[u"smtp"], u"relay_policy", false);
 
-    // server
+    // Server
     LikeHub::LikeHubConfig::EnsureObject(config, u"server");
     LikeHub::LikeHubConfig::EnsureKey(config[u"server"], u"port", 25);
 
@@ -26,8 +38,17 @@ void ApplyConfigDefaultsIfMissing(LikesProgram::Configuration& config) {
     LikesProgram::Configuration addrList; // 数组
     addrList.Push_back(u"*");
     LikeHub::LikeHubConfig::EnsureArray(config[u"server"], u"address", addrList);
+    
+    // NovaMailHub
+    LikeHub::LikeHubConfig::EnsureObject(config, u"hubServer");
+    LikeHub::LikeHubConfig::EnsureKey(config[u"hubServer"], u"serviceName", u"NovaMailSmtp");
+    LikeHub::LikeHubConfig::EnsureKey(config[u"hubServer"], u"ip", u"127.0.0.1");
+    LikeHub::LikeHubConfig::EnsureKey(config[u"hubServer"], u"port", 2525);
+    LikeHub::LikeHubConfig::EnsureKey(config[u"hubServer"], u"access", u"nov_amail_hub_server");
+    LikeHub::LikeHubConfig::EnsureKey(config[u"hubServer"], u"secret", u"nov_amail_hub_server");
+    LikeHub::LikeHubConfig::EnsureKey(config[u"hubServer"], u"tls", false);
 
-    // transaction
+    // Transaction
     LikeHub::LikeHubConfig::EnsureObject(config, u"transaction");
     LikeHub::LikeHubConfig::EnsureKey(config[u"transaction"], u"maxRcptCount", 1000);
     LikeHub::LikeHubConfig::EnsureKey(config[u"transaction"], u"maxDataBytes", 10485760);
@@ -39,13 +60,20 @@ void ApplyConfigDefaultsIfMissing(LikesProgram::Configuration& config) {
     LikeHub::LikeHubConfig::EnsureKey(config[u"logger"], u"path", u"./logs");
     LikeHub::LikeHubConfig::EnsureKey(config[u"logger"], u"filename", u"SmtpServer.log");
     LikeHub::LikeHubConfig::EnsureKey(config[u"logger"], u"max_file_size", 30);
-    LikeHub::LikeHubConfig::EnsureKey(config[u"logger"], u"file", true);
+    LikeHub::LikeHubConfig::EnsureKey(config[u"logger"], u"file", false);
     LikeHub::LikeHubConfig::EnsureKey(config[u"logger"], u"console", true);
 
     // DataBase
     LikeHub::LikeHubConfig::EnsureObject(config, u"database");
-    LikeHub::LikeHubConfig::EnsureKey(config[u"database"], u"uri", u"mysqlx://root:password@127.0.0.1:33060");
+    LikeHub::LikeHubConfig::EnsureKey(config[u"database"], u"uri", u"mysqlx://root:password@127.0.0.1:33060/NovaMailDatabase");
     LikeHub::LikeHubConfig::EnsureKey(config[u"database"], u"pool_size", 16);
+
+    // FileStorage
+    LikeHub::LikeHubConfig::EnsureObject(config, u"storage");
+    LikeHub::LikeHubConfig::EnsureKey(config[u"storage"], u"endpoint", u"192.168.235.129:9000");
+    LikeHub::LikeHubConfig::EnsureKey(config[u"storage"], u"access", u"likesprogram");
+    LikeHub::LikeHubConfig::EnsureKey(config[u"storage"], u"secret", u"likesprogram");
+    LikeHub::LikeHubConfig::EnsureKey(config[u"storage"], u"https", false);
 }
 
 // 格式化持续时间为字符串
@@ -76,19 +104,19 @@ int main() {
     LikesProgram::Time::Timer timer(true); // 自启动
 
     // 读取配置
-    LikeHub::LikeHubConfig config = LikeHub::LikeHubConfig::Instance(&ApplyConfigDefaultsIfMissing);
+    LikeHub::LikeHubConfig& config = LikeHub::LikeHubConfig::Instance(&ApplyConfigDefaultsIfMissing);
     config.LoadConfig(); // 读取配置文件
     config.SaveConfig(); // 重新保存写入，添加未配置的项目
 
     // 访问原始配置
     LikesProgram::Configuration rawConfig = config.Raw();
 
-    // 初始化日志系统
-    auto& logger = LikesProgram::Log::Logger::Instance(true);
-
     // 设置日志级别
     LikesProgram::String levelString = rawConfig[u"logger"][u"level"].AsString(); // 获取 配置 字符串
     LikesProgram::Log::Level level = LikesProgram::Log::StringToLevel(levelString);
+
+    // 初始化日志系统
+    auto& logger = LikesProgram::Log::Logger::Instance(true);
     logger.SetLevel(level);
 
     // 控制台日志
@@ -109,13 +137,20 @@ int main() {
     );
     if (fileLogging) logger.AddSink(LikesProgram::Log::FileSink::CreateSink(logPath, logFilename, maxFileSize));
 
-    
+    bool start_tls = rawConfig[u"smtp"][u"start_tls"].AsBool();
+    bool relay_policy = rawConfig[u"smtp"][u"relay_policy"].AsBool();
+    if (relay_policy && !start_tls) {
+        LogWarn(
+            u"SMTP configuration conflict detected: relay_policy=true requires start_tls=true. STARTTLS has been force-enabled automatically."
+        );
+    }
+
     // 读取 服务器 配置项
     unsigned short port = static_cast<unsigned short>(rawConfig[u"server"][u"port"].AsInt64()); // 端口号
     size_t subLoops = static_cast<size_t>(rawConfig[u"server"][u"eventLoopThreads"].AsInt64()); // 事件循环线程数
-    // 便利地址数组
-    std::vector<LikesProgram::String> addrs;
-    for (const auto& address : rawConfig[u"server"][u"address"]) addrs.push_back(address.AsString()); // 监听地址列表
+    // 构建监听地址
+    std::vector<LikesProgram::Net::Address> listenAddrs;
+    for (const auto& address : rawConfig[u"server"][u"address"]) listenAddrs.push_back(LikesProgram::Net::Address(address.AsString().ToStdString(), port));
 
     // 创建轮询器工厂
     LikesProgram::Net::PollerFactory pollerFactory = []()
@@ -133,23 +168,57 @@ int main() {
     // 初始化数据库连接池
     std::string databaseUri = rawConfig[u"database"][u"uri"].AsString().ToStdString();
     size_t poolSize = static_cast<size_t>(rawConfig[u"database"][u"pool_size"].AsInt64());
-    LikeHub::DataBasePool::Initialize(databaseUri, poolSize);
+    LikeHub::Storage::DatabasePool::Initialize(databaseUri, poolSize);
+
+    // 初始化文件系统
+    LikesProgram::String endpoint = rawConfig[u"storage"][u"endpoint"].AsString();
+    LikesProgram::String access = rawConfig[u"storage"][u"access"].AsString();
+    LikesProgram::String secret = rawConfig[u"storage"][u"secret"].AsString();
+    bool https = rawConfig[u"storage"][u"https"].AsBool();
+    std::shared_ptr<LikeHub::Storage::IFileSystem> iFileSystem = std::make_shared<LikeHub::Storage::MinioClient>(
+        endpoint.ToStdString(), access.ToStdString(), secret.ToStdString(), https
+    );
+    LikeHub::Storage::FileSystem::Instance().Initialize(iFileSystem);
+
+    // 初始化证书管理
+    LikeHub::SecurityContextManager::Initialize(LikeHub::Storage::DatabasePool::Instance());
+
+    // 初始化投递系统
+    NovaMail::Smtp::MailDispatcher::Initialize(subLoops, subLoops);
 
     // 创建服务器
-    LikesProgram::Net::Server server(addrs, port, pollerFactory, connectionFactory, subLoops);
+    auto server = std::make_shared<LikesProgram::Net::Server>(listenAddrs, pollerFactory, connectionFactory, subLoops);
 
-    /* TODO
-    * 1、创建 服务发现客户端
-    * 2、连接到 服务发现
-    * 3、注册事件 【邮件送达】
-    */
+    // 初始化 Hub 客户端
+    LikesProgram::String hubServerIp = rawConfig[u"hubServer"][u"ip"].AsString();
+    unsigned short hubServerPort = static_cast<unsigned short>(rawConfig[u"hubServer"][u"port"].AsInt64()); // 端口号
+    LikesProgram::String hubServerServiceName = rawConfig[u"hubServer"][u"serviceName"].AsString();
+    LikesProgram::String hubServerAccess = rawConfig[u"hubServer"][u"access"].AsString();
+    LikesProgram::String hubServerSecret = rawConfig[u"hubServer"][u"secret"].AsString();
+    LikeHub::LikeHubClient::Initialize(LikesProgram::Net::Address(
+        hubServerIp.ToStdString(), hubServerPort), hubServerServiceName, hubServerAccess, hubServerSecret, 
+    [&](){
+        // 客户端连接成功，并完成登录
+        LogInfo(u"NovaMailSmtp connected to LikeHub and logged in successfully");
+        // 启动服务器
+        server->Start();
+        // 注册中继投递事件
+        NovaMail::Smtp::RegisterRelayPolicySendMailEvent();
+        // if (rawConfig[u"smtp"][u"relay_policy"].AsBool()) NovaMail::Smtp::RegisterRelayPolicySendMailEvent();
+    }, [](std::string message){
+        // 客户端启动失败或登录失败
+        LogInfo(u"NovaMailSmtp failed to connect/login LikeHub: {}", message);
 
-    // 启动服务器
-    server.Start();
+        // 退出程序
+        std::exit(EXIT_FAILURE);
+    });
+
+    // 等待服务器启动
+    while (server->GetStatus() != LikesProgram::Net::Server::Status::Running);
     LogInfo(u"SMTP Server started on port {}, with {} event loop threads, startup time: {}", std::to_string(port), std::to_string(subLoops), FormatDuration(timer.Stop()));
 
     // 等待服务器停止（Shutdown 被调用）
-    server.WaitShutdown();
+    server->WaitShutdown();
     LogInfo(u"SMTP Server stopped.");
     return 0;
 }

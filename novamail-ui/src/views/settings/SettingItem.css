@@ -1,0 +1,102 @@
+/* 设置项 */
+.settingItem {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 0px;
+}
+.settingItem .settingContent {
+    width: 100%;
+    flex: 1;
+    font-size: 14px;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 20px;
+}
+.settingItem .settingContent.alignItemsStart {
+    align-items: flex-start;
+}
+.settingItem .settingContent.alignItemsStart .settingTitle {
+    padding-top: 10px;
+}
+.settingItem .settingContent .settingTitle {
+    flex-shrink: 0;
+    color: var(--text-primary);
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+/* 选项框 */
+.settingItem .settingContent .settingBox {
+    flex: 1;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+}
+.settingItem .settingContent .settingBox {
+    width: 500px;
+    max-width: 500px;
+    font-size: 14px;
+    margin-left: 45px;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    background-color: var(--bg-secondary2);
+    box-shadow: var(--shadow-card);
+}
+.settingItem .settingContent .settingBox .header {
+    width: 100%;
+    padding: 10px 15px;
+    background-color: var(--bg-secondary2);
+    color: var(--text-primary);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: var(--shadow-card);
+}
+.settingItem .settingContent .settingBox .btn-text {
+    --text-primary: var(--text-link);
+    padding: 0px 0px;
+}
+.settingItem .settingContent .settingBox .btn-text .iconfont {
+    font-size: 18px;
+}
+.settingItem .settingContent .settingBox .settings {
+    width: 100%;
+    padding: 10px 15px;
+    overflow: hidden;
+    overflow-y: auto;
+}
+.settingItem .settingContent .settingBox .settings .noData {
+    width: 100%;
+    font-family: 'artisticFonts';
+    padding: 15px 0px;
+    font-size: 18px;
+    color: var(--text-tertiary);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* 操作区域 */
+.settingItem .operation {
+    flex-shrink: 0;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 10px;
+}
+.settingItem .operation button {
+    padding: 8px 16px;
+}
+.settingItem .operation button .iconfont {
+    font-size: 18px;
+}

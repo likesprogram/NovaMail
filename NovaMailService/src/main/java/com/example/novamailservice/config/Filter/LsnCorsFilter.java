@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.Set;
 
+import jakarta.servlet.*;
 import jakarta.servlet.annotation.WebFilter;
 
 import com.example.novamailservice.dto.IpInfo;
@@ -11,12 +12,6 @@ import com.example.novamailservice.util.IpRegion;
 import com.example.novamailservice.util.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import jakarta.servlet.Filter;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.FilterConfig;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.ServletRequest;
-import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -41,50 +36,48 @@ public class LsnCorsFilter implements Filter {
     @Override
     public void init(FilterConfig filterConfig) {
         // 初始化过滤器
-        if (filterProperties.getAllowedOrigins() != null) {
-            corsOrigins.addInBatch(filterProperties.getAllowedOrigins());
-        }
+        if (filterProperties.getAllowedOrigins() != null)
+            corsOrigins.addOrigins(filterProperties.getAllowedOrigins());
+        // 初始化白名单
+        if (filterProperties.getAllowedWhiteList() != null)
+            corsOrigins.addWhiteBatch(filterProperties.getAllowedWhiteList());
     }
 
     private boolean isInList(String origin) {
         if (corsOrigins != null) {
-            Set<String> oriList = corsOrigins.getOrigin();
-            if (oriList != null) {
-                try {
-                    URI uri = new URI(origin);
-                    String host = uri.getHost(); // 提取域名或IP
-                    return oriList.contains(host);
-                } catch (Exception e) {
-                    log.warn("Origin 格式错误：{}", origin);
-                }
+            try {
+                URI uri = new URI(origin);
+                String host = uri.getHost(); // 提取域名或IP
+                return corsOrigins.containsOrigin(host);
+            } catch (Exception e) {
+                log.warn("Origin 格式错误：{}", origin);
             }
         }
         return false;
     }
 
-    @Override
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
-            throws IOException, ServletException {
-        RequestContext.clear(); // 清除线程中的数据
+    private boolean isInWhiteList(String uri) {
+        if (corsOrigins != null) return corsOrigins.containsWhite(uri);
+        return false;
+    }
 
+    @Override
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         HttpServletResponse res = (HttpServletResponse) response;
         HttpServletRequest req = (HttpServletRequest) request;
-
-        // 获取IP地址
-        IpInfo ipInfo = new IpInfo();
-        ipInfo.setIpAddress(getClientIp(req));
 
         // 获取请求的源（Origin）
         String origin = req.getHeader("Origin");
         String originPrefix = req.getScheme() + "://" + req.getRemoteHost();
-        boolean isAllowed;
-        if (origin == null) {
-            origin = originPrefix + ":" + req.getRemotePort();
-        }
-        isAllowed = isInList(origin);
+        if (origin == null) origin = originPrefix + ":" + req.getRemotePort();
+
+        // 跨域拦截
+        boolean isAllowed = isInList(origin) || isInList(originPrefix);
         if (!isAllowed) {
-            isAllowed = isInList(originPrefix);
-            if (!isAllowed) {
+            String uri = req.getRequestURI();
+            if (isInWhiteList(uri)) {
+                log.warn("来自【{}】的请求，跨域访问白名单地址【{}】", origin, uri);
+            } else {
                 log.warn("来自【{}】的请求未在允许列表中，跨域访问被拦截", origin);
                 res.setStatus(HttpServletResponse.SC_FORBIDDEN);
                 return;
@@ -93,13 +86,10 @@ public class LsnCorsFilter implements Filter {
 
         // 设置CORS头
         res.setHeader("Access-Control-Allow-Origin", origin);
-        // res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE,
-        // OPTIONS");
-        res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, OPTIONS,DELETE");
-        // res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization,
-        // X-Requested-With");
+        res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, OPTIONS, DELETE");
         res.setHeader("Access-Control-Allow-Headers", "*");
         res.setHeader("Access-Control-Allow-Credentials", "true");
+        res.setHeader("Access-Control-Expose-Headers", "X-New-Token");
         res.setHeader("access-control-max-age", "3600");
 
         // 对于预检请求（OPTIONS），直接返回响应，不继续链中的其他过滤器或目标资源
@@ -108,21 +98,32 @@ public class LsnCorsFilter implements Filter {
             return;
         }
 
-        // 获取IP归属地
-        ipInfo.setIpRegion(ipRegion.getRegion(ipInfo.getIpAddress()));
+        // 幂等保护
+        if (req.getAttribute("TOKEN_PARSED") == null) {
+            // 已执行 - 标记
+            req.setAttribute("TOKEN_PARSED", true);
 
-        // 获取客户端真实IP
-        RequestContext.setCurrentIp(ipInfo);
+            // 清除线程中的数据
+            RequestContext.clear();
 
-        // 获取账号 (此项目放到了 WebMvcConfigurer 中获取)
-//        RequestContext.setCurrentAccount(req.getHeader("account"));
-        RequestContext.setCurrentAccount(req, jwtTokenProvider);
+            // 获取IP地址
+            IpInfo ipInfo = new IpInfo();
+            ipInfo.setIpAddress(getClientIp(req));
 
-        // 获取设备信息
-        RequestContext.setDeviceInfo(req);
+            // 获取IP归属地
+            ipInfo.setIpRegion(ipRegion.getRegion(ipInfo.getIpAddress()));
 
-        log.info("接收到来自【{} : {}】的请求", origin, ipInfo.getIpRegion());
+            // 获取客户端真实IP
+            RequestContext.setCurrentIp(ipInfo);
 
+            // 获取账号 (此项目放到了 WebMvcConfigurer 中获取)
+            RequestContext.setCurrentAccount(req, res, jwtTokenProvider);
+
+            // 获取设备信息
+            RequestContext.setDeviceInfo(req);
+
+            log.info("接收到来自【{} : {}】的请求", origin, ipInfo.getIpRegion());
+        }
         // 继续链中的其他过滤器或目标资源
         chain.doFilter(request, response);
     }

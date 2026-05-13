@@ -1,9 +1,9 @@
 #pragma once
 #include <LikesProgram/net/Connection.hpp>
-#include <ServiceInstance.hpp>
+#include <Session.hpp>
 
 namespace LikeHub {
-    class Connection final : public LikesProgram::Net::Connection {
+    class Connection : public LikesProgram::Net::Connection {
     public:
         Connection(SocketType fd, LikesProgram::Net::EventLoop* loop, std::unique_ptr<LikesProgram::Net::Transport> transport);
         ~Connection();
@@ -18,6 +18,6 @@ namespace LikeHub {
         void OnMessage(LikesProgram::Net::Buffer& in) override;
         
     private:
-        ServiceInstance* instance = nullptr;
+        std::shared_ptr<Session> m_session;
     };
 }

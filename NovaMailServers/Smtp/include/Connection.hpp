@@ -1,6 +1,5 @@
 #pragma once
 #include <LikesProgram/net/Connection.hpp>
-#include <Types.hpp>
 #include <Session.hpp>
 
 namespace NovaMail {
@@ -19,7 +18,7 @@ namespace NovaMail {
             // 收到数据
             void OnMessage(LikesProgram::Net::Buffer& in) override;
         private:
-            Session m_session;
+            std::shared_ptr<Session> m_session;
         };
     }
 }

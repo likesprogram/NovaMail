@@ -1,5 +1,6 @@
 package com.example.novamailservice.service.Mail;
 
+import com.example.novamailservice.dto.MailBoxAddressToMailBoxAndUser;
 import com.example.novamailservice.dto.Result.ResponseResult;
 import com.example.novamailservice.entity.DomainNames.DomainNames;
 import com.example.novamailservice.entity.Mail.MailBoxChangeLog;
@@ -24,4 +25,6 @@ public interface MailBoxesService {
     ResponseResult<String> getMailBoxAddress(Long mailBoxId);
     // 根据邮箱对象获取完整邮箱地址
     ResponseResult<String> getMailBoxAddress(MailBoxes mailBox);
+    // 根据邮箱地址获取账号
+    ResponseResult<MailBoxAddressToMailBoxAndUser> getAccountByMailBoxAddress(String mailBoxAddress);
 }

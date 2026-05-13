@@ -10,6 +10,7 @@
             "@components/*": ["src/components/*"],
             "@views/*": ["src/views/*"],
             "@api/*": ["src/api/*"],
+            "@service/*": ["src/service/*"],
             "@router/*": ["src/router/*"],
             "@store/*": ["src/store/*"],
             "@utils/*": ["src/utils/*"],

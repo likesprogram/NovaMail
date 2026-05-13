@@ -1,24 +1,26 @@
 package com.example.novamailservice.config.Filter;
 
+import com.example.novamailservice.config.WebMvcConfig;
 import com.example.novamailservice.dto.DeviceInfo;
 import com.example.novamailservice.dto.IpInfo;
+import com.example.novamailservice.entity.Users.UserLoginLog;
 import com.example.novamailservice.util.DeviceInfoParser;
 import com.example.novamailservice.util.JwtTokenProvider;
+import jakarta.servlet.http.HttpServletResponse;
 import org.jetbrains.annotations.NotNull;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.*;
 
 public class RequestContext {
     // 使用ThreadLocal存储请求上下文信息
-    private static final ThreadLocal<Map<String, Object>> contextHolder =
-            ThreadLocal.withInitial(HashMap::new);
+    private static final ThreadLocal<Map<String, Object>> contextHolder = ThreadLocal.withInitial(HashMap::new);
 
     // 常量键名
     private static final String IP_KEY = "ip";
     private static final String ACCOUNT_KEY = "account";
     private static final String TOKEN_STATUS_KEY = "tokenStatus";
     private static final String DEVICE_KEY = "device";
-    private static final String USER_AGENT_KEY = "userAgent";
+    private static final String LOGIN_LOG = "loginLog";
 
     /**
      * 设置客户端IP
@@ -47,14 +49,32 @@ public class RequestContext {
     public static void setCurrentAccount(String account) {
         getContext().put(ACCOUNT_KEY, account);
     }
-    public static void setCurrentAccount(@NotNull HttpServletRequest request, @NotNull JwtTokenProvider jwtTokenProvider) {
+    public static void setCurrentAccount(@NotNull HttpServletRequest request, HttpServletResponse response, @NotNull JwtTokenProvider jwtTokenProvider) {
         String token = JwtTokenProvider.extractTokenFromRequest(request);
-        JwtTokenProvider.TokenStatus status = jwtTokenProvider.validateToken(token);
-        if (status == JwtTokenProvider.TokenStatus.VALID) {
+        JwtTokenProvider.ParseToken parseToken = jwtTokenProvider.parseToken(token, WebMvcConfig.shouldHandle(request));
+        if (parseToken.getTokenStatus() == JwtTokenProvider.TokenStatus.VALID) {
             // 存入 RequestContext，整个请求周期可用
-            setCurrentAccount(jwtTokenProvider.getAccountFromToken(token));
+            setCurrentAccount(parseToken.getAccount());
+            // 是否生成了新的 Token
+            if (parseToken.getNewToken() != null && !parseToken.getNewToken().isEmpty()) {
+                response.setHeader("X-New-Token", parseToken.getNewToken());
+            }
         }
-        setCurrentTokenStatus(status);
+        setCurrentTokenStatus(parseToken.getTokenStatus());
+    }
+
+    /**
+     * 设置登录日志
+     * */
+    public static void setLoginLog(@NotNull UserLoginLog userLoginLog) {
+        getContext().put(LOGIN_LOG, userLoginLog);
+    }
+
+    /**
+     * 获取登录日志
+     */
+    public static UserLoginLog getLoginLog() {
+        return (UserLoginLog) getContext().get(LOGIN_LOG);
     }
 
     /**
@@ -69,7 +89,6 @@ public class RequestContext {
      */
     public static void setDeviceInfo(HttpServletRequest request) {
         String userAgent = request.getHeader("User-Agent");
-        getContext().put(USER_AGENT_KEY, userAgent);
 
         // 将 HttpServletRequest 的 Headers 转为 Map<String, String>
         Map<String, String> headers = new HashMap<>();
@@ -83,13 +102,6 @@ public class RequestContext {
         DeviceInfo device = DeviceInfoParser.parse(userAgent, headers);
 
         getContext().put(DEVICE_KEY, device);
-    }
-
-    /**
-     * 获取原始User-Agent字符串
-     */
-    public static String getUserAgent() {
-        return (String) getContext().get(USER_AGENT_KEY);
     }
 
     /**

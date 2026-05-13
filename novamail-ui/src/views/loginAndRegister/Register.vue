@@ -21,8 +21,8 @@
                 <label for="NovaMailCode">验证码</label>
                 <span class="inputGroupBetween inputGroupInput">
                     <input type="text" v-model="registerInfo.smsCode.code" name="NovaMailCode" id="NovaMailCode" class="inputGroupInput" placeholder="请输入验证码">
-                    <button class="btn-primary inputGroupInput getCode" type="button"
-                    @click="ShowSMSBox">获取验证码</button>
+                    <button class="btn-primary inputGroupInput getCode" :class="{ 'btn-countdown': countdown > 0 }" type="button"
+                    @click="ShowSMSBox">{{ countdown > 0 ? `${countdown}s 后重试` : '获取验证码' }}</button>
                 </span>
             </div>
             <div class="inputGroup inputGroupDocument">
@@ -80,19 +80,28 @@
 </template>
 
 <script lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import MessageDialog from '@components/messageDialog/MessageDialog.vue';
 import '@components/messageDialog/MessageDialog.css'
 import { VerificationCode } from '@api/VerificationCode';
-import type { ImageCode, SmsCode } from '@api/VerificationCode';
-import ShowMessage from '@/components/messageDialog/ShowMessage.vue';
-import { Authentication, type RegisterData } from '@/api/users/Authentication';
+import type { ImageCode } from '@api/VerificationCode';
+import ShowMessage from '@components/messageDialog/ShowMessage.vue';
+import { Authentication, type RegisterData } from '@api/users/Authentication';
+import { useRouter } from 'vue-router';
+import { ApiException } from '@utils/Request';
+
+// 短信验证码倒计时持久化键
+const SMS_TIMER_KEY = 'sms_code_expire_time';
+
 export default {
     name: 'Register',
 }
 </script>
 
 <script setup lang="ts">
+// 路由
+const router = useRouter();
+
 // 获取验证码对话框
 const messageDialog = ref<typeof MessageDialog>();
 
@@ -168,15 +177,9 @@ const showMessage = ref<InstanceType<typeof ShowMessage>>();
 const getImageCode = async () => {
     try {
         const request = await VerificationCode.getImageCode();
-        if (request.code == 200) {
-            imageCode.value = request.data;
-        } else {
-            showMessage.value?.ShowModal("验证码获取失败", ["验证码获取失败：" + request.message, "是否重新获取"], "failure", (selectedButtonIndex) => {
-                if(selectedButtonIndex === 1) getImageCode();
-            });
-        }
+        imageCode.value = request.data;
     } catch (error) {
-        if (error instanceof Error) {
+        if (error instanceof ApiException) {
             showMessage.value?.ShowModal("验证码获取失败", ["验证码获取失败：" + error.message, "是否重新获取"], "failure", (selectedButtonIndex) => {
                 if(selectedButtonIndex === 1) getImageCode();
             });
@@ -188,24 +191,71 @@ const getImageCode = async () => {
     }
 };
 
+// 短信验证码 倒计时
+const countdown = ref(0);
+let timer: number | null = null;
+const startCountdown = () => { // 开始倒计时
+    const expireTime = Date.now() + 60 * 1000;
+    localStorage.setItem(SMS_TIMER_KEY, expireTime.toString());
+};
+const updateCountdown = () => { // 更新倒计时
+    const expireTime = Number(localStorage.getItem(SMS_TIMER_KEY));
+
+    if (!expireTime) {
+        countdown.value = 0;
+        return;
+    }
+
+    const remaining = Math.max(0, Math.floor((expireTime - Date.now()) / 1000));
+
+    countdown.value = remaining;
+
+    if (remaining <= 0) {
+        localStorage.removeItem(SMS_TIMER_KEY);
+        stopTimer();
+    }
+};
+// 开始计时
+const startTimer = () => {
+    if (timer) return;
+
+    updateCountdown(); // 立即更新一次
+
+    timer = window.setInterval(updateCountdown, 1000);
+};
+// 停止计时
+const stopTimer = () => {
+    if (timer) {
+        clearInterval(timer);
+        timer = null;
+    }
+};
+
+// 组件挂载
+onMounted(() => {
+    const expireTime = Number(localStorage.getItem(SMS_TIMER_KEY));
+
+    // 恢复短信验证码倒计时
+    if (expireTime && expireTime > Date.now()) startTimer();
+});
+
+// 组件卸载
+onUnmounted(() => {
+    stopTimer();  // 清理计时器
+});
+
 // 获取短信验证码
 const getSmsCode = async () => {
     try {
         registerInfo.value.smsCode.imageCode.sessionId = imageCode.value.sessionId;
-        const request = await VerificationCode.getSmsCode(registerInfo.value.smsCode);
-        if (request.code == 200) {
-            showMessage.value?.ShowModal("短信验证码发送成功", ["短信验证码已发送至您的手机，请注意查收！"], "success");
-            messageDialog.value?.Close(); // 关闭对话框
-            registerInfo.value.smsCode.imageCode.code = '';
-        } else {
-            showMessage.value?.ShowModal("短信验证码发送失败", ["短信验证码发送失败：" + request.message, "是否重新发送"], "failure", (selectedButtonIndex) => {
-                registerInfo.value.smsCode.imageCode.code = '';
-                if(selectedButtonIndex === 1) getImageCode();
-                else messageDialog.value?.Close(); // 关闭对话框
-            });
-        }
+        await VerificationCode.getSmsCode(registerInfo.value.smsCode);
+        startCountdown();   // 开始倒计时
+        startTimer();       // 启动计时器
+        showMessage.value?.ShowModal("短信验证码发送成功", ["短信验证码已发送至您的手机，请注意查收！"], "success");
+        messageDialog.value?.Close(); // 关闭对话框
+        registerInfo.value.smsCode.imageCode.code = '';
     } catch (error) {
-        if (error instanceof Error) {
+        if (error instanceof ApiException) {
             showMessage.value?.ShowModal("短信验证码发送失败", ["短信验证码发送失败：" + error.message, "是否重新发送"], "failure", (selectedButtonIndex) => {
                 registerInfo.value.smsCode.imageCode.code = '';
                 if(selectedButtonIndex === 1) getImageCode();
@@ -236,17 +286,29 @@ const registerUser = async () => {
         return;
     }
     try {
-        const request = await Authentication.register(registerInfo.value);
-        if (request.code == 200) {
-            showMessage.value?.ShowModal("注册成功", ["注册成功！","是否立即前往登录"], "success");
-        } else if(request.code == 3001) {
-            showMessage.value?.ShowModal("注册成功", ["账号注册成功！","在创建邮箱时出现错误，","需要登录后手动创建","是否立即前往登录"], "warning");
-        } else {
-            showMessage.value?.ShowModal("注册失败", ["注册失败：" + request.message], "failure");
-        }
+        await Authentication.register(registerInfo.value);
+        showMessage.value?.ShowModal("注册成功", ["注册成功！","是否立即前往登录"], "success", (selectedButtonIndex) => {
+            if(selectedButtonIndex === 1) router.replace({
+                name: 'login',
+                query:{
+                    account: registerInfo.value.account
+                }
+            });
+        });
     } catch (error) {
-        if (error instanceof Error) {
-            showMessage.value?.ShowModal("注册失败", ["注册失败：" + error.message], "failure");
+        if (error instanceof ApiException) {
+            if(error.code == 3001) {
+                showMessage.value?.ShowModal("注册成功", ["账号注册成功！","在创建邮箱时出现错误，","需要登录后手动创建","是否立即前往登录"], "warning", (selectedButtonIndex) => {
+                    if(selectedButtonIndex === 1) router.replace({
+                        name: 'login',
+                        query:{
+                            account: registerInfo.value.account
+                        }
+                    });
+                });
+            } else {
+                showMessage.value?.ShowModal("注册失败", ["注册失败：" + error.message], "failure");
+            }
         } else {
             showMessage.value?.ShowModal("注册失败", ["注册失败：未知错误！"], "failure");
         }
@@ -338,7 +400,7 @@ form {
     display: flex;
 }
 .inputGroup .getCode { 
-    height: 22px;
+    height: 32px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -346,7 +408,7 @@ form {
 .inputGroup .button {
     width: calc(100% - 80px);
     max-width: calc(100% - 80px);
-    height: 35px;
+    height: 40px;
     display: flex;
     justify-content: center;
     align-items: center;

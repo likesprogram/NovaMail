@@ -94,5 +94,5 @@ public class RedisConfig {
         return template;
     }
 
-    public static String NovaCache = "NovaCache:";
+    public static String NovaCache = "NovaMailCache:";
 }

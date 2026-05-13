@@ -5,12 +5,16 @@ import App from './App.vue'
 import '@assets/icons/iconfont/iconfont.css'
 // 导入通用样式
 import '@assets/public.css';
-// vue-router
+// 路由
 import { setupRouter } from '@router/index';
 // 导入 favicon 图片
 import faviconUrl from '@assets/icons/favicon.svg';
+// Pinia
+import { createPinia } from 'pinia'
+// UserStore
+import { UserStore } from '@store/UserStore'
 
-// 可选：将全局变量绑定到 window，方便类型推断
+// 将全局变量绑定到 window，方便类型推断
 declare global {
   interface Window {
     tinymce: any;
@@ -22,17 +26,23 @@ function setVh() {
     const vh = window.innerHeight * 0.01; // 1% 的可视高度
     document.documentElement.style.setProperty('--vh', `${vh}px`);
 }
-
 // 初始化
 setVh();
-
 // 当窗口大小变化时也更新（例如 iOS 地址栏显示/隐藏）
 window.addEventListener('resize', setVh);
 
-// vuex
+// 创建 VUEX 应用
 const app = createApp(App);
 
-// ✅ 添加全局变量 title
+// 注册 Pinia
+const pinia = createPinia();
+app.use(pinia);
+
+// 初始化 UserStore
+const userStore = UserStore();
+userStore.init();
+
+// 添加全局变量 title
 app.config.globalProperties.$title = '新星邮箱';
 app.config.globalProperties.$subtitle = 'NovaMail';
 app.config.globalProperties.$version = '1.0.0';
@@ -64,8 +74,8 @@ const setFavicon = (url: string) => {
 // 设置 favicon
 setFavicon(faviconUrl);
 
-// 挂载Vue Router
+// 挂载 Vue 路由
 setupRouter(app);
 
-// 挂载Vue
+// 挂载 Vue
 app.mount('#app');

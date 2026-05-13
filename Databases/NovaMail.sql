@@ -29,7 +29,7 @@ VALUES (1, 'NovaMail', '$2a$15$kiMRzgvS3DpUrfmm.FOfoODUEBwTYrhH.TcfFhBb6nhturmqn
  -- 用户登录记录表
 CREATE TABLE IF NOT EXISTS UserLoginLog (
     logId BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY COMMENT 'ID',
-    userId BIGINT UNSIGNED NOT NULL COMMENT '用户ID(NULL表示账号不存在/已删除)',
+    `account` VARCHAR(25) COMMENT '账号',
     loginTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '登录时间',
     -- 网络信息
     clientIp VARCHAR(64) COMMENT '客户端IP地址',
@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS UserLoginLog (
     failReason VARCHAR(255) DEFAULT NULL COMMENT '失败原因(密码错误/验证码错误等)',
     responseTime INT UNSIGNED COMMENT '登录处理耗时(ms)',
     -- 添加索引
-    INDEX idx_userId_loginTime (userId, loginTime DESC),    -- 按账号查最近登录记录
+    INDEX idx_userId_loginTime (`account`, loginTime DESC),    -- 按账号查最近登录记录
     INDEX idx_loginTime (loginTime),                        -- 按时间清理或统计
     INDEX idx_clientIp (clientIp),                          -- 查找同IP登录记录
     INDEX idx_platform (platform),                          -- 平台统计分析
@@ -73,11 +73,12 @@ CREATE TABLE IF NOT EXISTS DomainNames (
     userId BIGINT UNSIGNED DEFAULT NULL COMMENT '用户ID(NULL表示公共域名)',
     hasCertificate TINYINT(1) DEFAULT 0 COMMENT '是否有TLS证书',
     hasDKIM TINYINT(1) DEFAULT 0 COMMENT '是否有DKIM密钥',
-    isDefault TINYINT(1) UNIQUE DEFAULT 0 COMMENT '是否为默认域名(0: 否, 1: 是)',
+    isDefault TINYINT(1) DEFAULT 0 COMMENT '是否为默认域名(0: 否, 1: 是)',
     updateTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
     -- 添加外键关联
     FOREIGN KEY (userId) REFERENCES Users(userId) ON DELETE SET NULL ON UPDATE CASCADE,
     -- 添加索引
+    UNIQUE INDEX uniq_global_default_domain ((CASE WHEN isDefault = 1 THEN 1 ELSE NULL END)),
     INDEX idx_domainName (domainName),
     INDEX idx_userId (userId),
     INDEX idx_isDefault (isDefault)
@@ -194,7 +195,7 @@ CREATE TABLE IF NOT EXISTS MailBoxChangeLog (
 CREATE TABLE IF NOT EXISTS UserProfile (
     userId BIGINT UNSIGNED PRIMARY KEY COMMENT '用户ID',
     nickname VARCHAR(64) DEFAULT '未命名用户' COMMENT '用户昵称',
-    avatar VARCHAR(512) DEFAULT NULL COMMENT '用户头像URL',
+    avatar TINYINT UNSIGNED DEFAULT 0 COMMENT '用户头像索引',
     `address` VARCHAR(255) DEFAULT NULL COMMENT '现居地址', 
     `resume` VARCHAR(512) DEFAULT '这个人很懒，什么都没有留下~' COMMENT '用户简介',
     defaultMailBoxId  BIGINT UNSIGNED DEFAULT NULL COMMENT '默认发件邮箱',
@@ -208,26 +209,23 @@ CREATE TABLE IF NOT EXISTS UserProfile (
 ) COMMENT = '用户个人信息表';
  -- 插入管理员个人信息
 INSERT IGNORE INTO UserProfile (userId, nickname, avatar, `address`)
-VALUES (1, 'NovaMail', 'defaultAvatar', '中国 湖南省 长沙市');
+VALUES (1, 'NovaMail', 0, '中国 湖南省 长沙市');
 
  -- 邮箱SMTP/POP3授权码表
 CREATE TABLE IF NOT EXISTS EmailAuthorization (
     emailAuthorizationId BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT COMMENT '授权ID',
     userId BIGINT UNSIGNED NOT NULL COMMENT '用户ID',
-    mailBoxId BIGINT UNSIGNED NOT NULL COMMENT '邮箱ID', -- 一个邮箱可以有多个授权码
     authCode VARCHAR(255) UNIQUE NOT NULL COMMENT '授权码(客户端使用,用于SMTP/POP3登录验证) 存储哈希值',
     createTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '授权创建时间',
     expireTime TIMESTAMP DEFAULT NULL COMMENT '授权过期时间',
     isActivated TINYINT(1) DEFAULT 0 COMMENT '是否激活',
-    lastLoginTime TIMESTAMP NULL DEFAULT NULL COMMENT '上次通过该授权成功登录的时间',
+    lastLoginTime TIMESTAMP DEFAULT NULL COMMENT '上次通过该授权成功登录的时间',
     loginCount INT UNSIGNED DEFAULT 0 COMMENT '该授权成功登录次数',
     clientInfo VARCHAR(255) DEFAULT NULL COMMENT '创建授权的客户端信息(如User-Agent或设备标识)',
     updateTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
     -- 添加外键关联
     FOREIGN KEY (userId) REFERENCES Users(userId) ON DELETE CASCADE ON UPDATE CASCADE,
-    FOREIGN KEY (mailBoxId) REFERENCES MailBoxes(mailBoxId) ON DELETE CASCADE ON UPDATE CASCADE,
     -- 添加索引
-    INDEX idx_user_mail_active (userId, mailBoxId, isActivated),
     INDEX idx_userId (userId),
     INDEX idx_expireTime (expireTime),
     INDEX idx_isActivated (isActivated)
@@ -249,7 +247,7 @@ CREATE TABLE IF NOT EXISTS ContactGroups (
     groupId BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT COMMENT '分组ID',
     userId BIGINT UNSIGNED NOT NULL COMMENT '用户ID',
     groupName VARCHAR(255) NOT NULL COMMENT '分组名称',
-    groupType ENUM('custom', 'system') DEFAULT 'custom' COMMENT '分组类型',
+    groupType ENUM('CUSTOM', 'SYSTEM') DEFAULT 'CUSTOM' COMMENT '分组类型',
     sortOrder INT UNSIGNED DEFAULT 0 COMMENT '分组排序序号',
     createTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updateTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
@@ -288,11 +286,11 @@ CREATE TABLE IF NOT EXISTS UserFiles (
     fileType VARCHAR(50) DEFAULT NULL COMMENT '文件类型(MIME)',
     filePath VARCHAR(255) NOT NULL COMMENT '存储路径(完整逻辑路径)',
     parentPath VARCHAR(255) DEFAULT NULL COMMENT '父路径(用于层级结构)',
-    storageBucket VARCHAR(128) DEFAULT 'default' COMMENT '存储桶(物理存储空间)',
+    storageBucket VARCHAR(128) DEFAULT 'user' COMMENT '存储桶(物理存储空间)',
     fileHash CHAR(64) NOT NULL COMMENT '文件内容哈希(SHA256)',
     fileSize BIGINT UNSIGNED NOT NULL COMMENT '文件大小(字节)',
     `version` INT UNSIGNED DEFAULT 1 COMMENT '文件版本号',
-    fileStatus ENUM('active', 'deleted', 'uploading', 'archived') DEFAULT 'active' COMMENT '文件状态',
+    fileStatus ENUM('ACTIVE', 'DELETED', 'UPLOADING', 'ARCHIVED') DEFAULT 'ACTIVE' COMMENT '文件状态',
     `description` VARCHAR(512) DEFAULT NULL COMMENT '文件描述',
     uploadTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '上传时间',
     updateTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
@@ -319,8 +317,9 @@ CREATE TABLE IF NOT EXISTS UserSignatures (
     -- 添加外键关联
     FOREIGN KEY (userId) REFERENCES Users(userId) ON DELETE CASCADE ON UPDATE CASCADE,
     -- 添加索引
-    UNIQUE KEY uniq_user_default_signature (userId, isDefault), -- 每用户只能有一个默认签名
     UNIQUE INDEX uniq_user_signature (userId, signatureName), -- 防止重复签名名称
+    -- 只允许一个默认签名
+    UNIQUE INDEX uniq_user_default_signature ((CASE WHEN isDefault = 1 THEN userId ELSE NULL END)),
     INDEX idx_userId (userId),
     INDEX idx_signatureName (signatureName),
     INDEX idx_isDefault (isDefault)
@@ -348,8 +347,8 @@ VALUES
 (1, NULL, 'DRAFT', '草稿邮件', 1),
 (2, NULL, 'INBOX', '系统默认收件箱', 1),
 (3, NULL, 'SENT', '系统已发送邮件', 1),
-(4, NULL, 'TRASH', '被识别为垃圾邮件的邮件', 1),
-(5, NULL, 'SPAM', '系统识别的广告邮件', 1),
+(4, NULL, 'TRASH', '垃圾邮件', 1),
+(5, NULL, 'SPAM', '广告邮件', 1),
 (6, NULL, 'RECYCLE', '被用户移动到回收站', 1),
 (7, NULL, 'DELETED', '被用户标记为已删除', 1);
 
@@ -370,39 +369,54 @@ CREATE TABLE IF NOT EXISTS MailLabels (
     INDEX idx_labelName (labelName),
     INDEX idx_isSystem (isSystem)
 ) COMMENT='邮件标签表';
+
+-- 邮箱文件夹IMAP UID状态表
+CREATE TABLE IF NOT EXISTS MailBoxFolderState (
+    mailBoxId BIGINT UNSIGNED NOT NULL COMMENT '邮箱ID',
+    folderId BIGINT UNSIGNED NOT NULL COMMENT '文件夹ID',
+    uidNext INT UNSIGNED NOT NULL DEFAULT 1 COMMENT '下一个可分配的IMAP UID',
+    uidValidity INT UNSIGNED NOT NULL DEFAULT 1 COMMENT 'IMAP UIDVALIDITY',
+    createTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updateTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (mailBoxId, folderId),
+    FOREIGN KEY (mailBoxId) REFERENCES MailBoxes(mailBoxId) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (folderId) REFERENCES MailFolder(folderId) ON DELETE RESTRICT ON UPDATE CASCADE,
+    INDEX idx_folderId (folderId),
+    INDEX idx_uidNext (uidNext)
+) COMMENT='邮箱文件夹IMAP UID状态表';
+
  -- 插入系统默认标签
 INSERT IGNORE INTO MailLabels (labelId, userId, labelName, `description`, color, isSystem)
 VALUES
-(1, NULL, '重要', '用户标记为重要的邮件', '#F44336', 1),
-(2, NULL, '星标', '用户星标收藏的邮件', '#FFC107', 1);
+(1, NULL, '正常', '智能分类标签', '#4CAF50', 1),
+(2, NULL, '广告', '智能分类标签', '#FF9800', 1),
+(3, NULL, '垃圾', '智能分类标签', '#9E9E9E', 1),
+(4, NULL, '未知来源', 'DKIM验证失败或无法确认来源的邮件', '#795548', 1);
 
  -- 邮件表
 CREATE TABLE IF NOT EXISTS Mails (
-    mailId BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT COMMENT '邮件ID',
+    mailId BIGINT UNSIGNED PRIMARY KEY COMMENT '邮件ID',
     senderName VARCHAR(255) NOT NULL COMMENT '发件人显示名',
     senderEmail VARCHAR(255) NOT NULL COMMENT '发件人邮箱地址',
     `subject` VARCHAR(255) NOT NULL COMMENT '邮件主题',
-    `subtitle` MEDIUMTEXT DEFAULT NULL COMMENT '邮件副标题，用于内容预览(从EML解析的纯文本)',
-    `content` MEDIUMTEXT NOT NULL COMMENT '邮件内容(EML格式)',
-    sendTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '发送时间',
+    preview VARCHAR(1024) NOT NULL COMMENT '邮件内容预览',
+    filePath VARCHAR(255) DEFAULT NULL COMMENT '存储路径(完整逻辑路径)',
+    storageBucket VARCHAR(128) DEFAULT 'mails' COMMENT '存储桶(物理存储空间)',
     `status` ENUM(
-        'NORMAL',      -- 正常状态
-        'QUEUED',      -- 已进入队列，待发送
-        'SENDING',     -- 发送中
-        'SENT',        -- 发送成功
-        'FAILED',      -- 发送失败
-        'RECEIVED',    -- 接收到的邮件
-        'DELIVERED'    -- 已投递但未确认收信
-    ) DEFAULT 'NORMAL' COMMENT '邮件状态',
+      'STORING',     -- 等待处理（刚进入系统）
+      'PROCESSING',  -- 正在处理（写MinIO中）
+      'STORED',      -- 已存储（文件+DB完成）
+      'FAILED'       -- 系统级失败（严重错误）
+    ) DEFAULT 'STORING' COMMENT '邮件全局状态',
+    createTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     -- 添加索引
-    INDEX idx_sender_status_time (senderEmail, `status`, sendTime),
+    INDEX idx_sender_status_time (senderEmail, `status`, createTime),
     INDEX idx_senderName (senderName),
     INDEX idx_senderEmail (senderEmail),
     INDEX idx_subject (`subject`),
-    FULLTEXT INDEX idx_content_subtitle (`subtitle`),
-    FULLTEXT INDEX idx_content_fulltext (`content`),
+    FULLTEXT INDEX idx_content_fulltext (`preview`),
     INDEX idx_status (`status`),
-    INDEX idx_sendTime (sendTime)
+    INDEX idx_createTime (createTime)
 ) COMMENT='邮件表';
 
  -- 邮件附件表
@@ -425,32 +439,51 @@ CREATE TABLE IF NOT EXISTS MailAttachments (
 ) COMMENT='邮件附件表';
 
  -- 邮箱与邮件关联表
-CREATE TABLE IF NOT EXISTS MailBoxMails (
+CREATE TABLE IF NOT EXISTS MailBoxMailMapping (
     mappingId BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT COMMENT '记录ID',
     mailBoxId BIGINT UNSIGNED NOT NULL COMMENT '邮箱ID',
     mailId BIGINT UNSIGNED NOT NULL COMMENT '邮件ID',
-    recipientType ENUM(
+    mappingType ENUM(
         'FROM',   -- 发件人
-        'TO',     -- 主送
-        'CC',     -- 抄送
-        'BCC'     -- 密送
-    ) DEFAULT 'TO' COMMENT '邮箱角色类型',
+        'TO'      -- 接收
+    ) DEFAULT 'TO' COMMENT '关联类型',
+    `status` ENUM(
+        'NORMAL',      -- 正常状态
+        'QUEUED',      -- 已进入队列，待发送
+        'SENDING',     -- 发送中
+        'SENT',        -- 发送成功
+        'FAILED'       -- 发送失败
+    ) DEFAULT 'NORMAL' COMMENT '邮件状态',
     folderId BIGINT UNSIGNED DEFAULT 1 COMMENT '所属文件夹ID',
+    -- IMAP 专用 UID
+    imapUid INT UNSIGNED NOT NULL COMMENT 'IMAP UID，当前邮箱文件夹内唯一，不能复用',
     isRead TINYINT(1) DEFAULT 0 COMMENT '是否已读, 0: 未读, 1: 已读',
     isStarred TINYINT(1) DEFAULT 0 COMMENT '是否星标, 0: 否, 1: 是',
+    isAnswered TINYINT(1) NOT NULL DEFAULT 0 COMMENT '是否已回复, 0: 否, 1: 是',
     createTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '邮件添加到邮箱的时间',
+    updateTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     -- 添加外键
     FOREIGN KEY (mailBoxId) REFERENCES MailBoxes(mailBoxId) ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (mailId) REFERENCES Mails(mailId) ON DELETE CASCADE ON UPDATE CASCADE,
-    FOREIGN KEY (folderId) REFERENCES MailFolder(folderId) ON DELETE SET DEFAULT ON UPDATE CASCADE,
-    INDEX idx_mailBox_folder_recipient (mailBoxId, folderId, recipientType),
+    FOREIGN KEY (folderId) REFERENCES MailFolder(folderId) ON DELETE RESTRICT ON UPDATE CASCADE,
+        -- IMAP UID 核心唯一约束
+    UNIQUE INDEX uniq_mailbox_folder_imap_uid (mailBoxId, folderId, imapUid),
+
+    -- 防止同一封邮件重复进入同一个邮箱文件夹
+    UNIQUE INDEX uniq_mailbox_folder_mail (mailBoxId, folderId, mailId),
+
+    -- SELECT / FETCH / UID FETCH 常用索引
+    INDEX idx_mailbox_folder_uid (mailBoxId, folderId, imapUid),
+    INDEX idx_mailbox_folder_time (mailBoxId, folderId, createTime),
+    INDEX idx_mailbox_folder_status (mailBoxId, folderId, `status`),
+
     -- 添加索引
     INDEX idx_mailBoxId (mailBoxId),
     INDEX idx_mailId (mailId),
     INDEX idx_folderId (folderId),
     INDEX idx_isRead (isRead),
     INDEX idx_isStarred (isStarred),
-    INDEX idx_recipientType (recipientType)
+    INDEX idx_mappingType (mappingType)
 ) COMMENT='邮箱与邮件关联表，存储收件人、抄送、密送及发件人信息，同时记录邮件在各个文件夹的状态';
 
 -- 邮件与标签关联表（多对多）
@@ -460,11 +493,11 @@ CREATE TABLE IF NOT EXISTS MailLabelsMapping (
     labelId BIGINT UNSIGNED NOT NULL COMMENT '邮件标签ID',
     createTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '标签添加时间',
     -- 外键
-    FOREIGN KEY (mailBoxMailId) REFERENCES MailBoxMails(mappingId) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (mailBoxMailId) REFERENCES MailBoxMailMapping(mappingId) ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (labelId) REFERENCES MailLabels(labelId) ON DELETE CASCADE ON UPDATE CASCADE,
     -- 索引
     UNIQUE KEY uniq_mail_label (mailBoxMailId, labelId),
-    INDEX idx_mailBoxMailId (mailBoxMailId),
+    INDEX idx_mailBoxMailMappingId (mailBoxMailId),
     INDEX idx_labelId (labelId)
 ) COMMENT='邮件与标签关联表，支持一封邮件拥有多个标签';
 
@@ -475,7 +508,7 @@ CREATE TABLE IF NOT EXISTS DeliveryLog (
     recipientEmail VARCHAR(255) DEFAULT NULL COMMENT '收件人邮箱',
     smtpServer VARCHAR(255) DEFAULT NULL COMMENT 'SMTP服务器地址',
     attempt INT UNSIGNED DEFAULT 1 COMMENT '投递尝试次数',
-    `status` ENUM('SUCCESS', 'FAIL') NOT NULL COMMENT '投递状态',
+    `status` ENUM('SUCCESS', 'FAIL') NOT NULL DEFAULT 'SUCCESS' COMMENT '投递状态',
     deliveryTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '投递时间',
     errorMessage TEXT DEFAULT NULL COMMENT '错误信息(如果有)',
     -- 添加外键关联
@@ -531,7 +564,7 @@ CREATE TABLE IF NOT EXISTS ModelTrainingResults (
  -- 系统设置表
 CREATE TABLE IF NOT EXISTS SystemSettings (
     settingId BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT COMMENT '设置ID',
-    settingName VARCHAR(255) NOT NULL COMMENT '设置名称',
+    settingName VARCHAR(255) NOT NULL UNIQUE COMMENT '设置名称',
     settingValue LONGTEXT NOT NULL COMMENT '设置值',
     settingType VARCHAR(255) NOT NULL COMMENT '设置类型',
     createTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -541,12 +574,41 @@ CREATE TABLE IF NOT EXISTS SystemSettings (
     INDEX idx_settingType (settingType)
 ) COMMENT='系统设置表';
  -- 存储默认头像
-INSERT IGNORE INTO SystemSettings(settingId, settingName, settingValue, settingType)
-VALUES (1,
-    'defaultAvatar',
-    'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADwAAAA8CAYAAAA6/NlyAAAAAXNSR0IArs4c6QAAApJJREFUaEPtmc9PE0EUx787u93WUqUaWmsgxgMHDh4w4UqiiRwI/vhbFQ0HTTTxaiIHDxw4EANpbYlWKKXtdmfM2GwC2GaH7bx13M5eO52+z/vMezOzdbbrA4EZehwLnHHb1nDGBcMatoYzlgG7pDMm9C8ca9gazlgG7JLOmNB/27TkPfR+kWExz/4EctTn+NblcFLMcmpLeqnAsFp2x6LttkMc9ngq2KkAPygyPLw1Hjai/HoS4qBLD50K8LNaTsnem0agNG6aQeTAKyUXy6VRzcY9+x2OvU4YN2yqz8mBt2o55aYkm9pbYsukwBLgueJyjrRtNwLlBCVRbYGTZG3Sd2bOsEzETNWwBH4072LxhlqXPjrn+PLrP+/SXAAv7qntw6/rARjxOZO0aUW1vTrvYinG8uE5xy6xXRlPKsDyhzaqHvIT9PW5wLvmUGe/nDhXasCyY6/f8VD2L6/Z9kDg048h6d57kT414OhHZU1X8iPoVl+Q1+xV1aTAt30H8o50rPiP7ILvQPbon4rjk9SAduAnFQ9z7vhWu38WYu/08hVw5SbD8tz4q+NZKPChpbe2tQEXGPC0Gr/9DDmw0xxdAzerOXgKW/T7ZgBd7we0Aa+VXdQkNcHT6HF8bus5kGgDVr3kJ82HrpcDWoBDAbxUPE0lBX5VDzChNVxrSi3AMpDNu/H1e63Irgze+R5AJnbaRwuwDGKmlnSU9ccLHkqe3tN/Zyjw8Vjf1qTN8MWlJleez4ByzkHNZ6gUHBRjCrAbCrR6Ao0BRzsQGHCQHDdJgKetM8rvW2DK7JowtzVsggXKGKxhyuyaMLc1bIIFyhisYcrsmjC3NWyCBcoYrGHK7JowtzVsggXKGKxhyuyaMPdvK7NxwJf6+eYAAAAASUVORK5CYII=',
-    'file:image/png'
+INSERT IGNORE INTO SystemSettings(settingName, settingValue, settingType)
+VALUES ('DefaultAvatar',    'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADwAAAA8CAYAAAA6/NlyAAAAAXNSR0IArs4c6QAAApJJREFUaEPtmc9PE0EUx787u93WUqUaWmsgxgMHDh4w4UqiiRwI/vhbFQ0HTTTxaiIHDxw4EANpbYlWKKXtdmfM2GwC2GaH7bx13M5eO52+z/vMezOzdbbrA4EZehwLnHHb1nDGBcMatoYzlgG7pDMm9C8ca9gazlgG7JLOmNB/27TkPfR+kWExz/4EctTn+NblcFLMcmpLeqnAsFp2x6LttkMc9ngq2KkAPygyPLw1Hjai/HoS4qBLD50K8LNaTsnem0agNG6aQeTAKyUXy6VRzcY9+x2OvU4YN2yqz8mBt2o55aYkm9pbYsukwBLgueJyjrRtNwLlBCVRbYGTZG3Sd2bOsEzETNWwBH4072LxhlqXPjrn+PLrP+/SXAAv7qntw6/rARjxOZO0aUW1vTrvYinG8uE5xy6xXRlPKsDyhzaqHvIT9PW5wLvmUGe/nDhXasCyY6/f8VD2L6/Z9kDg048h6d57kT414OhHZU1X8iPoVl+Q1+xV1aTAt30H8o50rPiP7ILvQPbon4rjk9SAduAnFQ9z7vhWu38WYu/08hVw5SbD8tz4q+NZKPChpbe2tQEXGPC0Gr/9DDmw0xxdAzerOXgKW/T7ZgBd7we0Aa+VXdQkNcHT6HF8bus5kGgDVr3kJ82HrpcDWoBDAbxUPE0lBX5VDzChNVxrSi3AMpDNu/H1e63Irgze+R5AJnbaRwuwDGKmlnSU9ccLHkqe3tN/Zyjw8Vjf1qTN8MWlJleez4ByzkHNZ6gUHBRjCrAbCrR6Ao0BRzsQGHCQHDdJgKetM8rvW2DK7JowtzVsggXKGKxhyuyaMLc1bIIFyhisYcrsmjC3NWyCBcoYrGHK7JowtzVsggXKGKxhyuyaMPdvK7NxwJf6+eYAAAAASUVORK5CYII=',
+    'base64:image'
 );
+ -- 存储默认用户资料卡 (默认签名)
+INSERT IGNORE INTO SystemSettings(settingName, settingValue, settingType)
+VALUES ('DefaultSetting',
+'<xm-signature contenteditable="false" style="display:inline-block;line-height:1.43;">
+    <div style="display:block;width:150px;height:1px;margin:32px 0 10px;background:#e6e8eb;"></div>
+    <a href="{{profileCardUrl}}" target="_blank" style="text-decoration:none;font-family:-apple-system,BlinkMacSystemFont,PingFang SC,Microsoft YaHei">
+        <table cellspacing="0" cellpadding="0" style="table-layout:fixed;padding-right:20px">
+            <tr valign="top">
+                <td style="width:40px;min-width:40px;padding-top:10px">
+                    <div style="width:38px;height:38px;border-radius:50%;box-shadow:0 0 10px rgba(127,152,178,0.14)">
+                        <img src="{{avatarUrl}}" style="width:100%;height:100%;border-radius:50%;">
+                    </div>
+                </td>
+                <td style="padding:10px 0 8px 10px">
+                    <div style="font-size:14px;color:#333;font-weight:500">
+                        {{nickname}}
+                    </div>
+                    <div style="font-size:12px;color:#999">
+                        {{email}}
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </a>
+</xm-signature>',
+'text:html'
+);
+
+ -- 插入默认用户资料卡
+INSERT IGNORE INTO UserSignatures (userId, signatureName, signatureContent, isDefault)
+VALUES (1, '我的资料卡', 'DefaultSignatureTemplate', 1);
 
  -- 系统日志表
 CREATE TABLE IF NOT EXISTS SystemLog (

@@ -276,7 +276,7 @@
   content: "\e671";
 }
 /* 旋转图标 */
-.icon-likesprogramjiazaizhongxuanz {
+.icon-likesprogramjiazaizhong {
   display: inline-block; /* 确保 transform 生效 */
   animation: spin 1s linear infinite; /* 1秒匀速无限旋转 */
 }

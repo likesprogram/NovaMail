@@ -1,6 +1,7 @@
 package com.example.novamailservice.dto.Result;
 
 
+import com.example.novamailservice.config.Filter.RequestContext;
 import lombok.Data;
 
 @Data
@@ -9,11 +10,16 @@ public class ResponseResult<T> {
     private String message;
     private T data;
 
-    private ResponseResult() {}
+    private ResponseResult() {
+        this.code = null;
+        this.message = null;
+        this.data = null;
+    }
 
     private ResponseResult(Integer code, String message) {
         this.code = code;
         this.message = message;
+        this.data = null;
     }
 
     private ResponseResult(Integer code, String message, T data) {

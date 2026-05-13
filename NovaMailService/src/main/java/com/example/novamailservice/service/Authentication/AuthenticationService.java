@@ -8,4 +8,6 @@ public interface AuthenticationService {
     ResponseResult<String> register(String account, String password);
     // 登录
     ResponseResult<String> login(String account, String password);
+    // 退出登录
+    ResponseResult<String> logout();
 }

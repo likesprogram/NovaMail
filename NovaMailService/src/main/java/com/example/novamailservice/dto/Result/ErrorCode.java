@@ -26,7 +26,11 @@ public final class ErrorCode {
     public static final int USER_DISABLED = 2006;        // 用户被禁用
     public static final int USER_REGISTER_FAIL = 2007;   // 注册失败
     public static final int USER_PHONE_MISMATCH = 2008;  // 账号与验证码手机号不一致
-    public static final int USER_TOKEN_INVALID = 2009;   // Token 无效或过期
+
+    // ---------------- 认证相关 ----------------
+    public static final int TOKEN_EXPIRED = 4011;
+    public static final int TOKEN_ROBBED = 4012;
+    public static final int TOKEN_INVALID = 4013;
 
     // ---------------- 邮箱相关 ----------------
     public static final int MAILBOX_NOT_FOUND = 3001;       // 邮箱不存在
@@ -50,4 +54,7 @@ public final class ErrorCode {
     public static final int VC_SMS_CODE_ERROR = 5105;          // 验证码错误
     public static final int VC_SMS_CODE_EXPIRED = 5106;        // 验证码过期
     public static final int VC_SMS_PLATFORM_ERROR = 5107;      // 第三方短信服务异常
+
+    // ---------------- 微服务 ----------------
+    public static final int HUB_ERROR = 6001;               // 服务中心错误
 }

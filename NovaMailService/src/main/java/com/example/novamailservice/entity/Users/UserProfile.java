@@ -12,8 +12,8 @@ public class UserProfile {
     private Long userId;
     // 用户昵称
     private String nickname;
-    // 用户头像URL
-    private String avatar;
+    // 用户头像
+    private Integer avatar;
     // 现居地址
     private String address;
     // 用户简介

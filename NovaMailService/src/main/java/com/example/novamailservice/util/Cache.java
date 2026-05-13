@@ -38,7 +38,7 @@ public class Cache {
         try {
             // 获取当前 TTL
             Long currentTtl = redisTemplate.getExpire(key);
-            if (currentTtl == null || currentTtl <= 0) return; // key 不存在或已过期
+            if (currentTtl <= 0) return; // key 不存在或已过期
 
             long newTtl = Math.min(currentTtl + cacheProper.getExtend().getSeconds(),
                     cacheProper.getMax().getSeconds());
@@ -111,37 +111,32 @@ public class Cache {
     }
 
     // 删除缓存（单个 key）
-    public ResponseResult<Boolean> removeCache(String key) {
+    public void removeCache(String key) {
         try {
             Boolean result = redisTemplate.delete(key);
             if (Boolean.TRUE.equals(result)) {
                 logger.info("缓存已删除 [{}]", key);
-                return ResponseResult.success(true);
             } else {
                 logger.warn("缓存删除失败或不存在 [{}]", key);
-                return ResponseResult.error(ErrorCode.CACHE_MISS, "缓存不存在或已过期");
             }
         } catch (Exception e) {
             logger.error("删除缓存异常 [{}]: {}", key, e.getMessage());
-            return ResponseResult.error(ErrorCode.CACHE_ERROR, "缓存删除异常");
         }
     }
 
     // 批量删除缓存（多个 key）
-    public ResponseResult<Long> removeCache(List<String> keys) {
+    public void removeCache(List<String> keys) {
         try {
             Long deletedCount = redisTemplate.delete(keys);
             logger.info("批量删除缓存: 共 {} 条", deletedCount);
-            return ResponseResult.success(deletedCount);
         } catch (Exception e) {
             logger.error("批量删除缓存异常: {}", e.getMessage());
-            return ResponseResult.error(ErrorCode.CACHE_ERROR, "批量删除缓存异常");
         }
     }
 
 
     // 删除指定前缀的所有缓存
-    public ResponseResult<Long> removeCacheByPrefix(String prefix) {
+    public void removeCacheByPrefix(String prefix) {
         final int scanCount = 1000;  // SCAN 每次迭代条数
         final int batchSize = 500;   // 批量删除条数
         AtomicLong deletedCount = new AtomicLong(0);
@@ -150,12 +145,7 @@ public class Cache {
 
         try {
             redisTemplate.execute((RedisCallback<Void>) connection -> {
-                try (var cursor = connection.scan(
-                        ScanOptions.scanOptions()
-                                .match(prefix + "*")
-                                .count(scanCount)
-                                .build()
-                )) {
+                try (var cursor = connection.scan(ScanOptions.scanOptions().match(prefix + "*").count(scanCount).build())) {
                     List<String> batch = new ArrayList<>(batchSize);
 
                     while (cursor.hasNext()) {
@@ -184,12 +174,8 @@ public class Cache {
 
             long duration = System.currentTimeMillis() - startTime;
             logger.info("按前缀删除缓存 [{}]: 共 {} 条, 耗时 {} ms", prefix, deletedCount.get(), duration);
-
-            return ResponseResult.success(deletedCount.get());
-
         } catch (Exception e) {
             logger.error("按前缀删除缓存异常 [{}]: {}", prefix, e.getMessage(), e);
-            return ResponseResult.error(ErrorCode.CACHE_ERROR, "前缀删除缓存异常");
         }
     }
 }

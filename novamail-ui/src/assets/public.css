@@ -9,6 +9,7 @@
     --text-quaternary: rgba(255, 255, 255, 0.5); /* 特殊/白色文字，用于深色背景 */
     --text-link: rgba(65, 185, 255, 1);          /* 链接/强调文本 */
     --text-link-hover: rgba(65, 185, 255, 0.85); /* 链接悬停 */
+    --text-link-active: rgba(65, 185, 255, 0.70); /* 链接点击 */
     --text-disabled: rgba(0, 0, 0, 0.35);        /* 不可用文本 */
 
     /* ==========================
@@ -16,6 +17,9 @@
        ========================== */
     --bg-primary: #ffffff;                        /* 页面主背景 */
     --bg-secondary: rgba(255, 255, 255, .8);        /* 卡片、容器背景 */
+    --bg-secondary2: rgba(255, 255, 255, .4);        /* 卡片、容器背景 */
+    --bg-secondary3: rgba(200, 200, 200, .4);        /* 卡片、容器背景 */
+    --bg-secondary4: rgba(200, 200, 200, .3);        /* 卡片、容器背景 */
     --bg-tertiary: #eaeaea;                       /* 浅灰背景 */
     --bg-hover-primary: rgba(65, 185, 255, 0.2);  /* 悬停浅蓝背景 */
     --bg-active-primary: rgba(65, 185, 255, 0.3);/* 激活浅蓝背景 */
@@ -38,6 +42,17 @@
     --button-bg-primary: rgba(65, 185, 255, 1);   /* 主按钮填充 */
     --button-bg-primary-hover: rgba(65, 185, 255, 0.85);
     --button-bg-primary-active: rgba(65, 185, 255, 0.70);
+
+    --button-bg-warning: rgba(255, 170, 0, 1);          /* 警告 */
+    --button-bg-warning-hover: rgba(255, 170, 0, 0.85);
+    --button-bg-warning-active: rgba(255, 170, 0, 0.70);
+
+    --button-bg-danger: rgba(245, 63, 63, 1);           /* 危险 */
+    --button-bg-danger-hover: rgba(245, 63, 63, 0.85);
+    --button-bg-danger-active: rgba(245, 63, 63, 0.70);
+
+    --button-bg-disabled: var(--bg-tertiary); /* 禁用按钮背景 */
+    --button-text-disabled: var(--text-tertiary); /* 禁用按钮文字 */
     --button-bg-outline: var(--bg-transparent);             /* 线框按钮背景 */
     --button-text-primary: #ffffff;               /* 主按钮文字 */
     --button-text-outline: var(--button-bg-primary); /* 线框按钮文字 */
@@ -76,6 +91,7 @@ button {
     border-radius: 5px;
     padding: 5px 10px;
     gap: 5px;
+    box-sizing: border-box;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -91,6 +107,58 @@ button {
 }
 .btn-primary:active {
     background-color: var(--button-bg-primary-active);
+}
+/* 警告按钮 */
+.btn-warning {
+    transition: all .3s;
+    background-color: var(--button-bg-warning);
+    color: var(--button-text-primary);
+}
+.btn-warning:hover {
+    background-color: var(--button-bg-warning-hover);
+}
+.btn-warning:active {
+    background-color: var(--button-bg-warning-active);
+}/* 危险按钮 */
+.btn-danger {
+    transition: all .3s;
+    background-color: var(--button-bg-danger);
+    color: var(--button-text-primary);
+}
+.btn-danger:hover {
+    background-color: var(--button-bg-danger-hover);
+}
+.btn-danger:active {
+    background-color: var(--button-bg-danger-active);
+}
+
+/* 文本按钮 */
+.btn-text {
+    transition: all .3s;
+    background-color: var(--button-bg-outline);
+    color: var(--text-primary);
+}
+.btn-text:hover {
+    color: var(--button-bg-primary-hover);
+}
+.btn-text:active {
+    color: var(--button-bg-primary-active);
+}
+
+/* 禁用状态按钮 */
+.btn-disabled {
+    cursor: not-allowed;
+    background-color: var(--button-bg-disabled);
+    color: var(--button-text-disabled);
+    pointer-events: none;
+}
+
+/* 倒计时状态 */
+.btn-countdown {
+    cursor: not-allowed;
+    background-color: var(--button-bg-disabled);
+    color: var(--button-text-disabled);
+    pointer-events: none;
 }
 /* 边框按钮 */
 /* .btn-outline { 
@@ -111,12 +179,12 @@ input {
     font-size: 14px;
     border-radius: 5px;
     transition: all .3s;
-    border: 2px solid var(--border-primary);
+    border: 1px solid var(--border-primary);
 }
 input:hover,
 .input:hover { 
     background-color: var(--bg-primary);
-    border: 2px solid var(--border-hover);
+    border: 1px solid var(--border-hover);
     color: var(--text-primary);
 }
 input::placeholder,
@@ -126,13 +194,13 @@ input::placeholder,
 .input:focus-within,
 input:focus {
     background-color: var(--bg-primary);
-    border: 2px solid var(--input-primary-border);
+    border: 1px solid var(--input-primary-border);
     color: var(--text-primary);
 }
 .input-primary {
     background-color: var(--input-primary); 
     color: var(--input-primary-text);
-    border: 2px solid var(--input-primary-border-transparent);
+    border: 1px solid var(--input-primary-border-transparent);
 }
 .input-primary::placeholder { 
     color: var(--input-primary-text-placeholder);
@@ -141,7 +209,7 @@ input:focus {
 .input-primary:focus-within,
 .input-primary:focus {
     background-color: var(--bg-primary);
-    border: 2px solid var(--input-primary-border);
+    border: 1px solid var(--input-primary-border);
     color: var(--text-primary);
 }
 
@@ -161,7 +229,7 @@ input[type="checkbox"] {
     height: 13px;
     padding: 0px;
     border-radius: 4px;
-    border: 2px solid var(--border-primary);
+    border: 1px solid var(--border-primary);
     background-color: transparent;
     outline: none;
     cursor: pointer;

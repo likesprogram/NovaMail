@@ -7,8 +7,6 @@ import com.example.novamailservice.dto.Users.LoginUser;
 import com.example.novamailservice.dto.Users.RegisterUser;
 import com.example.novamailservice.service.Authentication.AuthenticationService;
 import com.example.novamailservice.service.VerificationCode.VerificationCodeService;
-import com.example.novamailservice.service.VerificationCode.VerificationCodeServiceImpl;
-import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,13 +15,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@Slf4j
 @RestController
 @RequestMapping("/authentication")
 public class AuthenticationController {
     private static final Logger logger = LoggerFactory.getLogger(AuthenticationController.class);
     private final AuthenticationService authenticationService;
     private final VerificationCodeService verificationCodeService;
+
     @Autowired
     public AuthenticationController(AuthenticationService authenticationService, VerificationCodeService verificationCodeService) {
         this.authenticationService = authenticationService;
@@ -44,7 +42,7 @@ public class AuthenticationController {
             } catch (ServiceException serviceException) {
                 return ResponseResult.error(serviceException.getCode(), serviceException.getMessage());
             } catch (Exception e) {
-                return ResponseResult.error(ErrorCode.INTERNAL_ERROR, "未知错误");
+                return ResponseResult.error(ErrorCode.USER_REGISTER_FAIL, "注册失败");
             }
         }
 
@@ -53,6 +51,14 @@ public class AuthenticationController {
 
     @PostMapping("/login")
     public ResponseResult<String> login(@RequestBody LoginUser loginUser) {
+        // 校验图片验证码
+        ResponseResult<String> imageCodeResult = verificationCodeService.checkImageCode(loginUser.getImageCode());
+        if(imageCodeResult.getCode() != 200) return imageCodeResult;
         return authenticationService.login(loginUser.getAccount(), loginUser.getPassword());
+    }
+
+    @PostMapping("/logout")
+    public ResponseResult<String> logout() {
+        return authenticationService.logout();
     }
 }

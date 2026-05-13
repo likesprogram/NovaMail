@@ -67,7 +67,7 @@ namespace LikeHub {
     void LikeHubConfig::SaveConfig(std::string_view dir, std::string_view file) {
         const std::filesystem::path p = std::filesystem::path(dir) / std::string(file);
         if (p.has_parent_path()) std::filesystem::create_directories(p.parent_path());
-    
+
         LikesProgram::String jsonText = m_config.Dump(4);
 
         WriteAllText(p, jsonText);

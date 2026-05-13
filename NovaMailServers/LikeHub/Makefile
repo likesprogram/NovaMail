@@ -11,10 +11,9 @@ INCLUDE_DIR  := -I $(MAKEFILE_DIR)../include
 INCLUDE_DIR  += -I $(MAKEFILE_DIR)include
 
 # 编译器与参数
-CXX      := g++-11
+CXX      := g++-11 -O0 -fno-omit-frame-pointer
 AR       := ar
 RANLIB   := ranlib
-
 CXXFLAGS := -std=c++20 -Wall -Wextra -Wpedantic -Werror
 CXXFLAGS += $(INCLUDE_DIR)
 # 自动生成依赖 .d
@@ -78,18 +77,18 @@ info:
 	@echo "LDLIBS      = $(LDLIBS)"
 
 # SDK -> 静态库
-$(TARGETLIB): $(OBJS_SDK)
+$(TARGETLIB): $(OBJS_SDK) $(LIB)
 	@mkdir -p $(dir $@)
 	@$(AR) rcs $@ $(OBJS_SDK)
 	@$(RANLIB) $@
 
 # APP + 依赖静态库 -> 可执行文件
-$(TARGET): $(OBJS_APP) $(TARGETLIB)
+$(TARGET): $(OBJS_APP) $(TARGETLIB) $(LIB)
 	@mkdir -p $(dir $@)
 	@$(CXX) $(OBJS_APP) -o $@ $(TARGETLIB) $(LDLIBS)
 
-# obj/xxx.o <- (MAKEFILE_DIR)xxx.cpp
-$(OBJ_DIR)/%.o: $(MAKEFILE_DIR)%.cpp
+# 将 ./src/a/b.cpp -> ./obj/./src/a/b.o
+$(OBJ_DIR)/%.o: %.cpp
 	@mkdir -p $(dir $@)
 	@$(CXX) $(CXXFLAGS) -c $< -o $@
 

@@ -1,6 +1,7 @@
 package com.example.novamailservice.config.MinIo;
 
 import io.minio.MinioClient;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -10,6 +11,7 @@ public class MinIoConfig {
     private final MinIoProperties minIoProperties;
 
     // 构造函数注入，Spring 自动注入 Bean
+    @Autowired
     public MinIoConfig(MinIoProperties minIoProperties) {
         this.minIoProperties = minIoProperties;
     }

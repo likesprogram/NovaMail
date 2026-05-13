@@ -2,7 +2,7 @@
 #include "EventLoop.hpp"
 #include "Channel.hpp"
 #include "Connection.hpp"
-#include "Transport.hpp"
+#include "Address.hpp"
 #include "../String.hpp"
 #include <functional>
 #include <memory>
@@ -24,7 +24,7 @@ namespace LikesProgram {
                 Connected,  // 连接成功正在通信
                 Stopping    // 正在停止
             };
-            explicit Client(const String& host, unsigned short port, ConnectionFactory factory);
+            explicit Client(const Address& remoteAddr, ConnectionFactory factory);
 
             ~Client();
 
@@ -75,8 +75,7 @@ namespace LikesProgram {
         private:
             std::thread m_loopThread;
             std::shared_ptr<EventLoop> m_loop;
-            String m_host;
-            uint16_t m_port{};
+            std::vector<Address> m_remoteAddrs; // 远程地址
 
             std::atomic<Status> m_status = Status::Stopped;
             mutable std::mutex m_stateMutex;           // 保护 Start/Shutdown/WaitShutdown 的状态切换
