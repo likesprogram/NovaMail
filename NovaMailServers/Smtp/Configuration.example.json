@@ -1,0 +1,46 @@
+{
+    "database": {
+        "pool_size": 16,
+        "uri": "mysqlx://root:<MYSQL_PASSWORD>@127.0.0.1:33060/NovaMailDatabase"
+    },
+    "hubServer": {
+        "access": "nov_amail_hub_server",
+        "ip": "127.0.0.1",
+        "port": 19090,
+        "secret": "<HUB_SHARED_SECRET>",
+        "serviceName": "NovaMailSmtp",
+        "tls": false
+    },
+    "logger": {
+        "console": true,
+        "file": false,
+        "filename": "SmtpServer.log",
+        "level": "debug",
+        "max_file_size": 30,
+        "path": "./logs"
+    },
+    "server": {
+        "address": [
+            "*"
+        ],
+        "eventLoopThreads": 8,
+        "port": 25
+    },
+    "smtp": {
+        "greeting": "NovaMail SMTP Server",
+        "hostname": "<SMTP_HOSTNAME>",
+        "relay_policy": true,
+        "start_tls": true
+    },
+    "storage": {
+        "access": "<MINIO_ACCESS_KEY>",
+        "endpoint": "127.0.0.1:9000",
+        "https": false,
+        "secret": "<MINIO_SECRET_KEY>"
+    },
+    "transaction": {
+        "dedupRcpt": true,
+        "maxDataBytes": 10485760,
+        "maxRcptCount": 1000
+    }
+}

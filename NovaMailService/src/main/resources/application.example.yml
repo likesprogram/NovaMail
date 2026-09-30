@@ -1,0 +1,139 @@
+# ==========================================================================
+# NovaMail 后端配置模板
+#
+# 使用方法：复制本文件为同目录下的 application.yml，然后按注释填写真实值。
+# 真正的 application.yml 已被 .gitignore 排除，不会进入版本库。
+#
+# 注意：本模板中的所有值都是占位符，直接启动会在连接数据库时失败。
+# ==========================================================================
+
+server:
+  port: 9099
+
+spring:
+  servlet:
+    multipart:
+      max-file-size: 200MB
+      max-request-size: 220MB
+
+  datasource:
+    # MySQL JDBC 地址，需与本机实际部署一致
+    url: jdbc:mysql://127.0.0.1:3306/NovaMailDatabase?autoReconnect=true&allowMultiQueries=true&useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root
+    # 填写你的 MySQL 密码
+    password: <MYSQL_PASSWORD>
+    driver-class-name: com.mysql.cj.jdbc.Driver # 明确指定驱动类
+
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6379
+      # Redis 未设置密码时留空
+      password: <REDIS_PASSWORD>
+      database: 0
+
+  security:
+    # 允许跨域的来源，逗号分隔
+    allowedOrigins: localhost, 127.0.0.1
+    # 无需鉴权即可访问的路径白名单
+    allowedWhiteList:
+      - /userProfile/avatar
+      - /userFiles/shared
+
+# ====================== ↓↓↓↓↓↓ JWT ↓↓↓↓↓↓ ======================
+jwt:
+  # BCrypt 密码加密强度，取值范围 4-31，必须大于 0，否则启动时直接抛异常
+  strength: 15
+  # JWT 签名密钥。代码中使用 Algorithm.HMAC256(secret)，即对称 HMAC 密钥，
+  # 填任意足够长的随机字符串即可（建议 32 字符以上），不需要生成 RSA 密钥对。
+  # 生成示例：openssl rand -base64 48
+  secret: <JWT_SECRET>
+  expiration: 10800 # 3 个小时 (单位 秒)
+  access-expiration: 10800
+  refresh-expiration: 604800
+
+# ====================== ↓↓↓↓↓↓ IP归属地查询 ↓↓↓↓↓↓ ======================
+ip-region:
+  update-url: "https://github.com/lionsoul2014/ip2region/raw/master/data/ip2region.xdb"
+  # IP 库文件路径。仓库已随附 src/main/resources/ipRegion/ip2region_v4.xdb，
+  # 建议改成当前机器上的绝对路径，避免因相对路径解析差异读不到文件。
+  local-path: "NovaMailService/src/main/resources/ipRegion/ip2region_v4.xdb"
+  update-cron: "0 0 2 * * ?"  # 每天凌晨2点更新
+
+# ====================== ↓↓↓↓↓↓ 验证码配置 ↓↓↓↓↓↓ ======================
+verification-code:
+  # 图片验证码配置
+  image-code:
+    # 图片宽高
+    width: 100
+    # 图片高度
+    height: 40
+    # 验证码字符个数
+    codeLength: 4
+    # 字体名称，对应 src/main/resources/fonts/custom.ttf（已随仓库提供）
+    fontName: "fonts/custom.ttf"
+    # 字体大小
+    fontSize: 34
+    # 验证码字符
+    character: "23456789ACDEFGHJKLMNPQRTUVWXYacdehjkmnpruvwxy"
+    # 验证码过期时间 单位秒
+    expiration: 300
+  # 短信验证码配置（阿里云短信，未使用时可以保留占位值）
+  sms-code:
+    # access Key Id
+    accessKeyId: <ALIYUN_SMS_ACCESS_KEY_ID>
+    # secret Key
+    accessKeySecret: <ALIYUN_SMS_ACCESS_KEY_SECRET>
+    # 是否使用商业签名（true 表示是企业签名，false 表示个人签名）
+    commercial: false
+    # 短信签名
+    signName: <ALIYUN_SMS_SIGN_NAME>
+    # 短信模板
+    templateCode: <ALIYUN_SMS_TEMPLATE_CODE>
+    # 验证码字符个数
+    codeLength: 6
+    # 验证码字符
+    character: "0123456789"
+    # 验证码过期时间 单位秒
+    expiration: 300
+    # 短信验证码发送间隔(IP) 单位秒
+    ipSendInterval: 60
+    # 短信验证码发送间隔(手机号) 单位秒
+    phoneSendInterval: 180
+
+# ====================== ↓↓↓↓↓↓ MinIO文件服务器 ↓↓↓↓↓↓ ======================
+minio:
+  endpoint: http://127.0.0.1:9000
+  userName: <MINIO_ACCESS_KEY>
+  password: <MINIO_SECRET_KEY>
+
+# ====================== ↓↓↓↓↓↓ Hub服务配置 ↓↓↓↓↓↓ ======================
+hub-server:
+  address: 127.0.0.1
+  # 必须与 LikeHub 的 server.port 完全一致
+  port: 19090
+  # 必须与 LikeHub 的 authentication.access 一致
+  userName: nov_amail_hub_server
+  # 必须与 LikeHub 的 authentication.secret 一致
+  password: <HUB_SHARED_SECRET>
+
+# ====================== ↓↓↓↓↓↓ 邮件 DNS 验证配置 ↓↓↓↓↓↓ ======================
+# 用于校验域名解析是否指向本项目的邮件服务器，按实际部署的公网 IP / 域名填写
+mail:
+  dns-verification:
+    imap-a:
+      - <IMAP_SERVER_PUBLIC_IP>
+    smtp-a:
+      - <SMTP_SERVER_PUBLIC_IP>
+    mx-host: <MAIL_HOSTNAME>
+    spf-ip4:
+      - <PUBLIC_IP>
+
+# ====================== ↓↓↓↓↓↓ 缓存 ↓↓↓↓↓↓ ======================
+cache:
+  # 缓存时长
+  duration: 1h
+  # 每次命中增加缓存时长
+  extend: 30m
+  # 缓存最大时长
+  max: 24h

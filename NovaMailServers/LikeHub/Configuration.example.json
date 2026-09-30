@@ -1,0 +1,31 @@
+{
+    "authentication": {
+        "access": "nov_amail_hub_server",
+        "secret": "<HUB_SHARED_SECRET>",
+        "whitelist": [
+            "*"
+        ]
+    },
+    "communication": {
+        "heartbeatInterval": 30,
+        "heartbeatTimeoutLimit": 3,
+        "requestRetryCount": 3,
+        "requestRetryEnabled": true,
+        "requestTimeoutMilliseconds": 10000
+    },
+    "logger": {
+        "console": true,
+        "file": false,
+        "filename": "HubServer.log",
+        "level": "debug",
+        "max_file_size": 30,
+        "path": "./logs"
+    },
+    "server": {
+        "address": [
+            "*"
+        ],
+        "eventLoopThreads": 8,
+        "port": 19090
+    }
+}

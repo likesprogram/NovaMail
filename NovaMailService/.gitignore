@@ -33,3 +33,5 @@ build/
 ### VS Code ###
 .vscode/
 *.yml
+# 配置模板需要入库，方便别人克隆后参照填写真正的 application.yml
+!src/main/resources/application.example.yml

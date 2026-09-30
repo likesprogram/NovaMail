@@ -1,0 +1,34 @@
+{
+    "database": {
+        "pool_size": 16,
+        "uri": "mysqlx://root:<MYSQL_PASSWORD>@127.0.0.1:33060/NovaMailDatabase"
+    },
+    "hubServer": {
+        "access": "nov_amail_hub_server",
+        "ip": "127.0.0.1",
+        "port": 19090,
+        "secret": "<HUB_SHARED_SECRET>",
+        "serviceName": "NovaMailClassification",
+        "tls": false
+    },
+    "logger": {
+        "console": true,
+        "file": false,
+        "filename": "NovaMailClassification.log",
+        "level": "debug",
+        "max_file_size": 30,
+        "path": "./logs"
+    },
+    "models": {
+        "labelMapPath": "./models/NovaMailClassification_1_0_2/label_map.json",
+        "maxLength": 256,
+        "modelPath": "./models/NovaMailClassification_1_0_2/bert.onnx",
+        "vocabPath": "./models/NovaMailClassification_1_0_2/vocab.txt"
+    },
+    "storage": {
+        "access": "<MINIO_ACCESS_KEY>",
+        "endpoint": "127.0.0.1:9000",
+        "https": false,
+        "secret": "<MINIO_SECRET_KEY>"
+    }
+}

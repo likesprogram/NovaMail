@@ -1,6 +1,5 @@
 ### NovaMailServers build outputs ###
 NovaMailServers/bin/
-NovaMailServers/lib/
 NovaMailServers/**/bin/
 NovaMailServers/**/obj/
 NovaMailServers/**/logs/
@@ -54,3 +53,14 @@ __pycache__/
 **/__pycache__/
 *.py[cod]
 *$py.class
+
+### NovaMailServers/lib —— 第三方链接库 ###
+# 本目录是 C++ 服务的链接输入。其中绝大多数第三方库体积大、且可从上游按对应版本获取，
+# 因此不入库；只有 LikesProgram 例外：上游仓库已做不向下兼容的全面重构，
+# 旧版本无法再获取，必须随仓库保留才能让 C++ 服务有机会重新编译。
+# 注意：本段必须放在文件末尾，靠后的规则优先，才能覆盖上方的 *.a / *.so 等通配规则。
+NovaMailServers/lib/*
+!NovaMailServers/lib/libLikesProgramStatic.a
+!NovaMailServers/lib/cmake/
+NovaMailServers/lib/cmake/*
+!NovaMailServers/lib/cmake/LikesProgram/
