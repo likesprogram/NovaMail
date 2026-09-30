@@ -13,7 +13,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Service;
 
 import java.io.InputStream;
-import java.net.URI;
 import java.util.Base64;
 
 @Service
@@ -134,24 +133,23 @@ public class UserAvatarServiceImpl implements UserAvatarService {
                 return;
             }
         }
-        if ("object:minio".equals(type)) {
+        if ("object:minio".equals(type) || "object".equals(type)) {
             try {
-                URI uri = URI.create(value);
-
-                if (!"minio".equals(uri.getScheme())) {
+                String prefix = "minio://";
+                if (value == null || !value.startsWith(prefix)) {
                     response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
                     return;
                 }
 
-                String bucketName = uri.getHost();
-                String path = uri.getPath();
-
-                if (bucketName == null || bucketName.isBlank() || path == null || path.length() <= 1) {
+                String target = value.substring(prefix.length());
+                int slashIndex = target.indexOf('/');
+                if (slashIndex <= 0 || slashIndex >= target.length() - 1) {
                     response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
                     return;
                 }
 
-                String objectName = path.substring(1);
+                String bucketName = target.substring(0, slashIndex);
+                String objectName = target.substring(slashIndex + 1);
                 writeMinioObjectToResponse(bucketName, objectName, "avatar", response);
                 return;
             } catch (Exception e) {

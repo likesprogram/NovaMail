@@ -1,6 +1,6 @@
 <template>
     <div class="inbox">
-        <EmailList mailBox="inbox" :title="'收件箱'" :mailBoxFolder="mailBoxFolder" :actionsMask="EmailActions.Delete | EmailActions.Forward | EmailActions.MarkRead | EmailActions.Mark | EmailActions.MoveTo"></EmailList>
+        <EmailList mailBox="inbox" :title="'收件箱'" :mailBoxFolder="mailBoxFolder" :actionsMask="EmailActions.Delete | EmailActions.ReplyAll | EmailActions.Forward | EmailActions.MarkRead | EmailActions.Mark | EmailActions.MoveTo"></EmailList>
     </div>
 </template>
 

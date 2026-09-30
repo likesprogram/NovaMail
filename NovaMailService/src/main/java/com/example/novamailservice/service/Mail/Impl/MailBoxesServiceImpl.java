@@ -140,6 +140,8 @@ public class MailBoxesServiceImpl implements MailBoxesService {
 
         log.setRemark("注册账号，创建默认邮箱");
         mailBoxChangeLogService.writeLog(log);
+
+        cache.removeCacheByPrefix(MailBoxCachePrefix);
         return ResponseResult.success(newMailBox);
     }
 
@@ -238,6 +240,33 @@ public class MailBoxesServiceImpl implements MailBoxesService {
         } catch (Exception e) {
             logger.error("数据库查询异常: {}", e.getMessage());
             return ResponseResult.error(ErrorCode.DATABASE_ERROR, "数据库访问异常");
+        }
+    }
+
+    @Override
+    public ResponseResult<String> updateMailBoxOpenStatus(Long userId, Long mailBoxId, Integer isOpen) {
+        if (userId == null || userId <= 0 || mailBoxId == null || mailBoxId <= 0 || isOpen == null || isOpen < 0 || isOpen > 2) {
+            return ResponseResult.error(ErrorCode.PARAM_INVALID, "参数错误");
+        }
+
+        try {
+            MailBoxes mailBox = mailBoxesMapper.selectById(mailBoxId);
+            if (mailBox == null || Integer.valueOf(2).equals(mailBox.getIsOpen())) {
+                return ResponseResult.error(ErrorCode.MAILBOX_NOT_FOUND, "邮箱不存在");
+            }
+            if (!userId.equals(mailBox.getUserId())) {
+                return ResponseResult.error(ErrorCode.FORBIDDEN, "你无权操作此邮箱");
+            }
+
+            if (mailBoxesMapper.updateOpenStatus(mailBoxId, userId, isOpen) <= 0) {
+                return ResponseResult.error(ErrorCode.DATABASE_ERROR, "邮箱状态更新失败");
+            }
+
+            cache.removeCacheByPrefix(MailBoxCachePrefix);
+            return ResponseResult.success("操作成功");
+        } catch (Exception e) {
+            logger.error("邮箱状态更新异常: {}", e.getMessage());
+            return ResponseResult.error(ErrorCode.DATABASE_ERROR, "邮箱状态更新失败");
         }
     }
 

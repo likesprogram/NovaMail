@@ -13,14 +13,20 @@ import java.util.concurrent.CopyOnWriteArraySet;
 public class MailWebSocketSessionManager {
 
     private final ConcurrentMap<String, Set<WebSocketSession>> accountSessions = new ConcurrentHashMap<>();
+    private final Set<WebSocketSession> adminSessions = new CopyOnWriteArraySet<>();
 
     public void addSession(String account, WebSocketSession session) {
         accountSessions
                 .computeIfAbsent(account, key -> new CopyOnWriteArraySet<>())
                 .add(session);
+        if (Boolean.TRUE.equals(session.getAttributes().get("isAdmin"))) {
+            adminSessions.add(session);
+        }
     }
 
     public void removeSession(String account, WebSocketSession session) {
+        if (session != null) adminSessions.remove(session);
+
         Set<WebSocketSession> sessions = accountSessions.get(account);
         if (sessions == null) return;
 
@@ -35,6 +41,34 @@ public class MailWebSocketSessionManager {
             return;
         }
 
+        sendToSessions(sessions, account, message);
+    }
+
+    public void sendToAdmins(String message) {
+        if (adminSessions.isEmpty()) return;
+
+        for (WebSocketSession session : adminSessions) {
+            if (session == null || !session.isOpen()) {
+                adminSessions.remove(session);
+                continue;
+            }
+
+            try {
+                synchronized (session) {
+                    session.sendMessage(new TextMessage(message));
+                }
+            } catch (IOException e) {
+                adminSessions.remove(session);
+            }
+        }
+    }
+
+    public boolean isOnline(String account) {
+        Set<WebSocketSession> sessions = accountSessions.get(account);
+        return sessions != null && !sessions.isEmpty();
+    }
+
+    private void sendToSessions(Set<WebSocketSession> sessions, String account, String message) {
         for (WebSocketSession session : sessions) {
             if (session == null || !session.isOpen()) {
                 removeSession(account, session);
@@ -49,10 +83,5 @@ public class MailWebSocketSessionManager {
                 removeSession(account, session);
             }
         }
-    }
-
-    public boolean isOnline(String account) {
-        Set<WebSocketSession> sessions = accountSessions.get(account);
-        return sessions != null && !sessions.isEmpty();
     }
 }

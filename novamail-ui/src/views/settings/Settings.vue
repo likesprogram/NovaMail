@@ -33,7 +33,7 @@
                         <span class="line"></span>
                     </router-link>
                     <router-link class="catalogueItem" to="/settings/services">
-                        服务管理
+                        服务监控
                         <span class="line"></span>
                     </router-link>
                 </template>

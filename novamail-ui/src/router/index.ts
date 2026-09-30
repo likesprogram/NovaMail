@@ -1,5 +1,6 @@
 import type { App } from 'vue';
 // 引入 main_router.ts
+import { setShellTitle } from '@utils/NovaShellSdk';
 import { MainRoutes } from '@/router/modules/MainRouter';
 import { createRouter, createWebHistory  } from 'vue-router';
 import { getCurrentInstance } from 'vue'
@@ -29,6 +30,7 @@ export function resetRouter() {
 
 // 路由前置守卫
 router.beforeEach(async (to: any, from, next) => {
+	from; // 避免 ESLint 报错
 	// 判断是否需要登录后才可访问
 	if (to.meta.requiresAuth) {  // 如果页面需要先登录才能访问
 		if (userService.isLogin()) {
@@ -50,6 +52,7 @@ router.afterEach((to) => {
 	const pageTitle = to.matched.filter(r => r.meta && r.meta.title).map(r => r.meta.title as string).pop();
 	if (pageTitle) document.title = `${title}-${pageTitle}`;
 	else document.title = title;
+	setShellTitle(document.title);
 });
 
 /* 导出 setupRouter */

@@ -19,6 +19,8 @@ public interface MailBoxesService {
     // 获取邮箱列表
     ResponseResult<List<MailBoxes>> getMailBoxListByUserId(Long userId);
     ResponseResult<List<MailBoxes>> getMailBoxListByDomainNameId(Long domainNameId);
+    // 更新邮箱状态
+    ResponseResult<String> updateMailBoxOpenStatus(Long userId, Long mailBoxId, Integer isOpen);
     // 查询所有邮箱
     ResponseResult<List<MailBoxes>> getAllMailBoxes();
     // 根据邮箱ID获取完整邮箱地址

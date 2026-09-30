@@ -454,7 +454,7 @@ public class VerificationCodeServiceImpl implements VerificationCodeService {
         }
 
         // 验证通过后删除 Redis 中的验证码，防止重复使用
-        redisTemplate.delete(phoneNumber);
+        redisTemplate.delete(redisKeyPrefixSmsCode + phoneNumber);
         return ResponseResult.success("验证码正确");
     }
 

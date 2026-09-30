@@ -44,7 +44,7 @@
                     <span class="count">{{ formatCount(getFolderCount('5')) }}</span>
                 </router-link>
             </div>
-            <div class="menuList" :class="{ 'menuListNoBorder': !isWindows }">
+            <div class="menuList" :class="{ 'menuListNoBorder': inNovaShell }">
                 <router-link class="menuItem" to="/address">
                     <span class="iconfont icon-likesprogramtongxunlu"></span>
                     <span class="title">通讯录</span>
@@ -55,7 +55,7 @@
                 </router-link>
             </div>
             <!-- 下载按钮 -->
-            <button v-if="isWindows" class="download btn-primary button">
+            <button v-if="!inNovaShell" class="download btn-primary button" @click="downloadClient">
                 <span class="iconfont icon-likesprogramxiazai"></span>
                 <span class="title">下载客户端</span>
             </button>
@@ -74,6 +74,8 @@ import ShowMessage from '@components/messageDialog/ShowMessage.vue';
 import { Email, type MailBoxFolder } from '@api/email/Email';
 import { webSocketService, type WebSocketMessage, type NewEmailMessageData } from '@service/WebSocketService';
 import { useRouter } from 'vue-router';
+import { isRunningInNovaShell } from '@utils/NovaShellSdk';
+import { SystemSettingService } from '@service/SystemSettingService';
 
 let unsubscribeNewWebSocket: (() => void) | null = null;
 let unsubscribStatuseWebSocket: (() => void) | null = null;
@@ -86,7 +88,7 @@ export default defineComponent({
 <script setup lang="ts">
 const router = useRouter();
 
-const isWindows = ref(false);
+const inNovaShell = ref(isRunningInNovaShell());
 
 // 对话框实例
 const showMessage = ref<InstanceType<typeof ShowMessage>>();
@@ -110,6 +112,15 @@ const formatCount = (count: number): string => {
     return count > 0 ? String(count) : '';
 };
 
+const downloadClient = async () => {
+    try {
+        const clientInfo = await SystemSettingService.getClientDownloadInfo();
+        await SystemSettingService.downloadClient(clientInfo.fileName);
+    } catch (error) {
+        showMessage.value?.ShowModal('客户端下载失败', ['管理员暂未配置客户端安装包，或文件暂时不可用'], 'failure');
+    }
+};
+
 // 获取签名列表
 const getFolderList = async () => {
     try {
@@ -125,8 +136,6 @@ const getFolderList = async () => {
 };
 
 onMounted(() => {
-    const ua = navigator.userAgent || navigator.vendor || (window as any).opera;
-    isWindows.value = /win/i.test(ua.toLowerCase());
     // 获取邮箱列表
     getFolderList();
     // 注册新邮件通知事件
@@ -146,7 +155,7 @@ onMounted(() => {
     });
         // 注册新邮件通知事件
     unsubscribStatuseWebSocket = webSocketService.onMessage((message: WebSocketMessage) => {
-        if (message.type === 'MAIL_STATUS_CHANGED') {
+        if (message.type === 'MAIL_STATUS_CHANGED' || message.type === 'MAIL_MOVED') {
             // 刷新侧边栏文件夹未读数
             getFolderList();
         }

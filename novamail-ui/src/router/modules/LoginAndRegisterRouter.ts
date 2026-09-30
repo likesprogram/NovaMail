@@ -23,7 +23,7 @@ export const LoginAndRegisterRoutes: RouteRecordRaw[] = [
             {
                 path: 'forget',
                 name: 'forget',  // 忘记密码
-                component: () => import('@views/email/Star.vue'),
+                component: () => import('@views/loginAndRegister/Forget.vue'),
                 meta: { requiresAuth: false, title: '忘记密码' },
             },
         ],

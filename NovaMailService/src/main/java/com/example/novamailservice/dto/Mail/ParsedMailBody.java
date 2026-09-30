@@ -11,4 +11,5 @@ public class ParsedMailBody {
     private String textBody;
     private List<MailAddressInfo> to = new ArrayList<>();
     private List<MailAddressInfo> cc = new ArrayList<>();
+    private List<MailAttachmentResponse> attachments = new ArrayList<>();
 }

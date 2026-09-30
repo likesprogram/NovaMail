@@ -211,11 +211,11 @@ CREATE TABLE IF NOT EXISTS UserProfile (
 INSERT IGNORE INTO UserProfile (userId, nickname, avatar, `address`)
 VALUES (1, 'NovaMail', 0, '中国 湖南省 长沙市');
 
- -- 邮箱SMTP/POP3授权码表
+ -- 邮箱SMTP/IMAP授权码表
 CREATE TABLE IF NOT EXISTS EmailAuthorization (
     emailAuthorizationId BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT COMMENT '授权ID',
     userId BIGINT UNSIGNED NOT NULL COMMENT '用户ID',
-    authCode VARCHAR(255) UNIQUE NOT NULL COMMENT '授权码(客户端使用,用于SMTP/POP3登录验证) 存储哈希值',
+    authCode VARCHAR(255) UNIQUE NOT NULL COMMENT '授权码(客户端使用,用于SMTP/IMAP登录验证)',
     createTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '授权创建时间',
     expireTime TIMESTAMP DEFAULT NULL COMMENT '授权过期时间',
     isActivated TINYINT(1) DEFAULT 0 COMMENT '是否激活',
@@ -229,7 +229,7 @@ CREATE TABLE IF NOT EXISTS EmailAuthorization (
     INDEX idx_userId (userId),
     INDEX idx_expireTime (expireTime),
     INDEX idx_isActivated (isActivated)
-) COMMENT='邮箱SMTP/POP3授权表';
+) COMMENT='邮箱SMTP/IMAP授权表';
 
  -- 用户偏好设置表
 CREATE TABLE IF NOT EXISTS UserSettings (

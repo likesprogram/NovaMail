@@ -9,6 +9,7 @@ public class MailDetailStorageInfo {
     private Long mappingId;
     private Long mailBoxId;
     private Long mailId;
+    private Long folderId;
 
     private String senderName;
     private String senderEmail;

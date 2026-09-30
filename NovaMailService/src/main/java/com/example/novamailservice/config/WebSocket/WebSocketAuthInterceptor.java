@@ -30,6 +30,7 @@ public class WebSocketAuthInterceptor implements HandshakeInterceptor {
         Users user = userResult.getData();
         attributes.put("userId", user.getUserId());
         attributes.put("account", user.getAccount());
+        attributes.put("isAdmin", Boolean.TRUE.equals(user.getIsAdmin()));
         attributes.put("user", user);
         return true;
     }

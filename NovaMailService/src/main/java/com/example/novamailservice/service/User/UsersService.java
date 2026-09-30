@@ -10,5 +10,6 @@ public interface UsersService {
     ResponseResult<Users> getUserByAccount(String account);
     ResponseResult<Users> getUserByMailBoxId(Long mailBoxId);
     ResponseResult<String> updatePassword(Users user, UpdatePassword updatePassword);
+    ResponseResult<String> resetPassword(Users user);
     void updateLastLoginTime(Long userId, String account); // 更新登录时间
 }

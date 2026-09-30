@@ -1,6 +1,19 @@
 import { createApp } from 'vue'
 import './style.css'
 import App from './App.vue'
+
+// 设置窗口标题和尺寸
+import { notifyShellReady } from '@utils/NovaShellSdk';
+notifyShellReady({
+    title: 'Nova Mails',
+    window: {
+        initialWidth: 1420,
+        initialHeight: 860,
+        minWidth: 1420,
+        minHeight: 860,
+    },
+});
+
 // 导入图标
 import '@assets/icons/iconfont/iconfont.css'
 // 导入通用样式

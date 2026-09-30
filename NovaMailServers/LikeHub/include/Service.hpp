@@ -49,6 +49,9 @@ namespace LikeHub {
         }
 
         // 注册事件
+        ServiceLoadSnapshot GetLoadSnapshot() const noexcept;
+        ServiceSnapshot GetSnapshot() const noexcept;
+
         uint64_t RegisterEvent(const std::string& eventName, ListenType listenType = ListenType::Event);
         
         // 注销事件
@@ -65,5 +68,11 @@ namespace LikeHub {
         mutable std::shared_mutex m_eventsMutex;
 
         std::atomic<double> m_load{0.0}; // 综合负载，范围 [0.0, 1.0]
+        InstanceMetricsSnapshot m_metrics;
+        double m_cpuLoad = 0.0;
+        double m_memLoad = 0.0;
+        double m_stressLoad = 0.0;
+        double m_latencyLoad = 0.0;
+        mutable std::shared_mutex m_loadMutex;
     };
 }

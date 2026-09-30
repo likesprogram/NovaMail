@@ -1,6 +1,6 @@
 <template>
     <div class="deleted">
-        <EmailList mailBox="deleted" :title="'已删除'" :mailBoxFolder="mailBoxFolder" :actionsMask="EmailActions.Delete | EmailActions.Forward | EmailActions.MarkRead | EmailActions.Mark | EmailActions.MoveTo"></EmailList>
+        <EmailList mailBox="deleted" :title="'已删除'" :mailBoxFolder="mailBoxFolder" :actionsMask="EmailActions.Delete | EmailActions.ReplyAll | EmailActions.Forward | EmailActions.MarkRead | EmailActions.Mark | EmailActions.MoveTo"></EmailList>
     </div>
 </template>
 

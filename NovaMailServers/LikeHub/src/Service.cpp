@@ -25,7 +25,9 @@ namespace LikeHub {
         }
         
         // 移除服务注册
-        ServiceRegistry::Instance().UnregisterService(Id());
+        auto snapshot = GetSnapshot();
+        snapshot.lifecycle = LifecycleStatus::Deregistering;
+        ServiceRegistry::Instance().UnregisterService(Id(), snapshot);
     }
 
     
@@ -52,7 +54,15 @@ namespace LikeHub {
             return;
         }
     
-        m_load.store(load, std::memory_order_relaxed);
+        {
+            std::unique_lock lock(m_loadMutex);
+            m_metrics = metrics;
+            m_cpuLoad = cpu;
+            m_memLoad = mem;
+            m_stressLoad = stress;
+            m_latencyLoad = lat;
+            m_load.store(load, std::memory_order_relaxed);
+        }
     
         LogDebug(
             u"Service load updated: serviceId={} serviceName={} lifecycle={} health={} oldLoad={} newLoad={} cpuPct={} memPct={} stressIndicators={} delayMs={} cpu={} mem={} qps={} lat={}",
@@ -71,6 +81,32 @@ namespace LikeHub {
             stress,
             lat
         );
+    }
+
+    ServiceLoadSnapshot Service::GetLoadSnapshot() const noexcept {
+        ServiceLoadSnapshot snapshot;
+        {
+            std::shared_lock lock(m_loadMutex);
+            snapshot.metrics = m_metrics;
+            snapshot.cpu = m_cpuLoad;
+            snapshot.mem = m_memLoad;
+            snapshot.stress = m_stressLoad;
+            snapshot.lat = m_latencyLoad;
+            snapshot.load = m_load.load(std::memory_order_relaxed);
+        }
+        snapshot.effectiveLoad = GetLoad();
+        return snapshot;
+    }
+
+    ServiceSnapshot Service::GetSnapshot() const noexcept {
+        ServiceSnapshot snapshot;
+        snapshot.serviceId = Id();
+        snapshot.serviceName = Name();
+        snapshot.serviceAddress = Address().ToString();
+        snapshot.lifecycle = GetStatus();
+        snapshot.health = GetHealthStatus();
+        snapshot.load = GetLoadSnapshot();
+        return snapshot;
     }
 
     uint64_t Service::RegisterEvent(const std::string& eventName, ListenType listenType) {

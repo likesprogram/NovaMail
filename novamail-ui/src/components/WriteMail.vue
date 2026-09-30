@@ -66,7 +66,7 @@
                                 </button>
                             </div>
                             <div class="imagePanelGroup">
-                                <button class="btn-primary">
+                                <button class="btn-primary" @click.stop="openFileBoxPicker">
                                     从文件中转站选择
                                 </button>
                                 <button class="btn-primary" @click="openImage">
@@ -116,7 +116,7 @@
                         <div class="signatureInfo" v-for="signature in signatures">
                             <div class="button btn-text signature" @click="selectedSignature(signature.signatureId)">
                                 <span class="title">{{ signature.signatureName }}</span>
-                                <span class="iconfont icon-likesprogramzhengque" v-if="signature.signatureId == signatureId"></span>
+                                <span class="iconfont icon-likesprogramzhengque" v-if="signature.signatureId === signatureId"></span>
                             </div>
                         </div>
                     </div>
@@ -129,7 +129,84 @@
             <div v-if="signatureContent && signatureContent.length > 0" class="signature" @click.stop v-html="SignatureService.renderSignature(
                 signatureContent, userStore.account, userStore.nickname, userStore.mailBoxView
             )"></div>
+            <div v-if="forwardContentHtml" class="forwardPreview" @click.stop v-html="forwardContentHtml"></div>
         </div>
+
+        <MessageDialog ref="fileBoxDialog" @closeEvent="cleanupPreviewUrl">
+            <template #title>
+                <span>从文件中转站选择</span>
+            </template>
+            <template #content>
+                <div class="filePickerDialog">
+                    <div class="filePickerSidebar">
+                        <div class="filePickerSearch">
+                            <input v-model="filePickerKeyword" type="text" placeholder="搜索文件">
+                            <span class="iconfont icon-likesprogramchaxun"></span>
+                        </div>
+                        <div class="filePickerList">
+                            <button v-for="file in filteredFilePickerFiles" :key="file.fileId" class="filePickerItem"
+                                :class="{ selected: file.fileId === selectedPickerFileId }"
+                                @click="selectPickerFile(file.fileId)">
+                                <span class="filePickerIcon">
+                                    <img :src="getPickerFileIconUrl(file.fileName)" alt="file icon">
+                                </span>
+                                <span class="filePickerInfo">
+                                    <span class="filePickerName">{{ file.fileName }}</span>
+                                    <span class="filePickerMeta">{{ FileProcessing.getFileSize(file.fileSize) }} · {{ file.filePath }}</span>
+                                </span>
+                            </button>
+                            <div v-if="filteredFilePickerFiles.length === 0" class="filePickerEmpty">
+                                {{ isLoadingPickerFiles ? '加载中' : '暂无可选文件' }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="filePickerPreview">
+                        <template v-if="selectedPickerFile">
+                            <div class="filePickerPreviewHeader">
+                                <span>{{ selectedPickerFile.fileName }}</span>
+                                <span>{{ selectedPickerFile.fileType || '未知类型' }}</span>
+                            </div>
+                            <div class="filePickerPreviewBody">
+                                <div v-if="isLoadingPreview" class="filePickerPreviewFallback">
+                                    <span>预览加载中</span>
+                                </div>
+                                <img v-else-if="isImageFile(selectedPickerFile) && previewObjectUrl" :src="previewObjectUrl" alt="preview"
+                                    @error="handlePreviewLoadError">
+                                <iframe v-else-if="(isPdfFile(selectedPickerFile) || isTextLikeFile(selectedPickerFile)) && previewObjectUrl"
+                                    :src="previewObjectUrl" title="file preview"></iframe>
+                                <div v-else-if="isPreviewFailed" class="filePickerPreviewFallback">
+                                    <img :src="getPickerFileIconUrl(selectedPickerFile.fileName)" alt="file icon">
+                                    <span>预览加载失败</span>
+                                </div>
+                                <div v-else class="filePickerPreviewFallback">
+                                    <img :src="getPickerFileIconUrl(selectedPickerFile.fileName)" alt="file icon">
+                                    <span>此文件暂不支持直接预览</span>
+                                </div>
+                            </div>
+                        </template>
+                        <div v-else class="filePickerPreviewFallback">
+                            <span class="iconfont icon-likesprogramwenzhang"></span>
+                            <span>选择文件后预览</span>
+                        </div>
+                    </div>
+                </div>
+            </template>
+            <template #footer>
+                <div class="dialogFooterButton failure" @click="closeFileBoxDialog">
+                    <span class="textBox">
+                        <span class="iconfont icon-likesprogramcuowu"></span>
+                        <span class="text">取消</span>
+                    </span>
+                    <span class="line"></span>
+                </div>
+                <div class="dialogFooterButton success" :class="{ disabled: !selectedPickerFile || !isImageFile(selectedPickerFile) }" @click="insertSelectedFileReference">
+                    <span class="textBox">
+                        <span class="iconfont icon-likesprogramzhengque"></span>
+                        <span class="text">插入</span>
+                    </span>
+                </div>
+            </template>
+        </MessageDialog>
 
         <!-- 消息提示 -->
         <ShowMessage ref="showMessage"/>
@@ -148,7 +225,10 @@ import EmojiListData from '@components/staticData/EmojiList.json';
 import ShowMessage from '@components/messageDialog/ShowMessage.vue';
 import { Signature } from '@api/users/Signature';
 import { ImageProcessing } from '@utils/ImageProcessing';
+import { FileProcessing } from '@utils/FileProcessing';
 import { MailService, type MailDraft, type MailExtraData } from '@service/MailService';
+import { UserFiles, type UserFile } from '@api/users/UserFiles';
+import MessageDialog from '@components/messageDialog/MessageDialog.vue';
 
 export default defineComponent({
     name: 'WriteMail',
@@ -240,6 +320,7 @@ const signatureContent = computed({
     get: () => props.modelValue.signatureContent,
     set: value => updateDraft('signatureContent', value)
 });
+const forwardContentHtml = computed(() => MailService.renderMail(props.modelValue.forwardContent || ''));
 const recipientAreaRef = ref<HTMLElement | null>(null);
 const showCc = ref(false);
 const showBcc = ref(false);
@@ -268,6 +349,14 @@ const handleDocumentMouseDown = (event: MouseEvent) => {
 
 // 对话框实例
 const showMessage = ref<InstanceType<typeof ShowMessage>>();
+const fileBoxDialog = ref<InstanceType<typeof MessageDialog> | null>(null);
+const filePickerFiles = ref<UserFile[]>([]);
+const selectedPickerFileId = ref('');
+const filePickerKeyword = ref('');
+const isLoadingPickerFiles = ref(false);
+const isLoadingPreview = ref(false);
+const isPreviewFailed = ref(false);
+const previewObjectUrl = ref('');
 
 // 正文编辑框
 const ckeditor = CKEditor.component;
@@ -323,7 +412,7 @@ onMounted(async () => {
     // 获取签名列表
     await getSignatures();
     // 获取签名内容
-    if (signatureId.value && signatureId.value !== "none") getSignatureContent(signatureId.value);
+    if (signatureId.value && signatureId.value !== "none" && !signatureContent.value) getSignatureContent(signatureId.value);
 });
 // 组件卸载
 onBeforeUnmount(() => {
@@ -339,6 +428,114 @@ const imagePanel = ref<InstanceType<typeof SafePopover> | null>(null);
 const showImagePanel = () => {
     imagePanel.value?.show(imageButton.value as HTMLElement);
 }
+const cleanupPreviewUrl = () => {
+    if (previewObjectUrl.value) {
+        URL.revokeObjectURL(previewObjectUrl.value);
+        previewObjectUrl.value = '';
+    }
+};
+const handlePreviewLoadError = () => {
+    isPreviewFailed.value = true;
+    cleanupPreviewUrl();
+};
+const isImageFile = (file: UserFile) => /^(image\/)/i.test(file.fileType || '');
+const isPdfFile = (file: UserFile) => (file.fileType || '').toLowerCase() === 'application/pdf';
+const isTextLikeFile = (file: UserFile) => {
+    const type = (file.fileType || '').toLowerCase();
+    return type.startsWith('text/') || ['application/json', 'application/xml', 'application/javascript'].includes(type);
+};
+const getPickerFileIconUrl = (fileName: string) => FileProcessing.getFileIcon(fileName);
+const selectedPickerFile = computed(() => filePickerFiles.value.find(file => file.fileId === selectedPickerFileId.value) ?? null);
+const filteredFilePickerFiles = computed(() => {
+    const keyword = filePickerKeyword.value.trim().toLowerCase();
+    return filePickerFiles.value.filter(file => {
+        return !keyword
+            || file.fileName.toLowerCase().includes(keyword)
+            || file.filePath.toLowerCase().includes(keyword)
+            || (file.fileType || '').toLowerCase().includes(keyword);
+    });
+});
+const loadPickerPreview = async (file: UserFile) => {
+    cleanupPreviewUrl();
+    isPreviewFailed.value = false;
+    isLoadingPreview.value = true;
+    try {
+        if (isImageFile(file) || isPdfFile(file) || isTextLikeFile(file)) {
+            const blob = await UserFiles.previewBlob(file.fileId);
+            previewObjectUrl.value = URL.createObjectURL(blob);
+            return;
+        }
+        const blob = await UserFiles.downloadBlob(file.fileId);
+        previewObjectUrl.value = URL.createObjectURL(blob);
+    } catch {
+        isPreviewFailed.value = true;
+        previewObjectUrl.value = '';
+    } finally {
+        isLoadingPreview.value = false;
+    }
+};
+const selectPickerFile = async (fileId: string) => {
+    selectedPickerFileId.value = fileId;
+    const file = filePickerFiles.value.find(item => item.fileId === fileId);
+    if (file) await loadPickerPreview(file);
+};
+const openFileBoxPicker = async () => {
+    isLoadingPickerFiles.value = true;
+    filePickerFiles.value = [];
+    selectedPickerFileId.value = '';
+    filePickerKeyword.value = '';
+    isPreviewFailed.value = false;
+    isLoadingPreview.value = false;
+    cleanupPreviewUrl();
+    try {
+        const result = await UserFiles.list();
+        const fileList = Array.isArray(result.data) ? result.data : [];
+        filePickerFiles.value = fileList.filter(file => file.fileStatus === 'ACTIVE');
+        selectedPickerFileId.value = filePickerFiles.value[0]?.fileId ?? '';
+        fileBoxDialog.value?.ShowModal();
+        if (selectedPickerFileId.value) {
+            const file = filePickerFiles.value[0];
+            if (file) void loadPickerPreview(file).catch(() => {
+                previewObjectUrl.value = '';
+            });
+        }
+    } catch (error) {
+        showMessage.value?.ShowModal('文件选择', ['文件中转站列表加载失败，请稍后重试'], 'failure');
+    } finally {
+        isLoadingPickerFiles.value = false;
+    }
+};
+const closeFileBoxDialog = () => {
+    fileBoxDialog.value?.Close();
+};
+const insertSelectedFileReference = () => {
+    const file = selectedPickerFile.value;
+    if (!file) return;
+    if (!isImageFile(file)) {
+        showMessage.value?.ShowModal('文件插入', ['当前只支持将图片文件插入正文'], 'failure');
+        return;
+    }
+    insertSelectedFileAsImage(file);
+};
+
+const blobToDataUrl = async (blob: Blob): Promise<string> => {
+    return await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ''));
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(blob);
+    });
+};
+const insertSelectedFileAsImage = async (file: UserFile) => {
+    try {
+        const blob = await UserFiles.previewBlob(file.fileId);
+        const dataUrl = await blobToDataUrl(blob);
+        insertImage(dataUrl);
+        fileBoxDialog.value?.Close();
+    } catch {
+        showMessage.value?.ShowModal('文件插入', ['文件预览失败，请稍后重试'], 'failure');
+    }
+};
 // 从本地打开图片
 const openImage = async () => {
     try {
@@ -481,10 +678,6 @@ const getSignatures = async () => {
 };
 // 获取签名内容
 const getSignatureContent = async (_signatureId: string) => {
-    if (_signatureId == "none") {
-        signatureContent.value = "";
-        return;
-    }
     try {
         const renderedContent = await SignatureService.getSignatureContent(_signatureId);
         signatureContent.value = renderedContent.data;
@@ -506,7 +699,18 @@ const showSignatureSettingPanel = () => {
 }
 // 选择 签名
 const selectedSignature = (_signatureId: string) => {
-    signatureId.value = _signatureId;
+    if (_signatureId === "none") {
+        emit('update:modelValue', {
+            ...props.modelValue,
+            signatureId: "none",
+            signatureContent: ""
+        });
+        return;
+    }
+    emit('update:modelValue', {
+        ...props.modelValue,
+        signatureId: _signatureId
+    });
     getSignatureContent(_signatureId);
 }
 
@@ -574,7 +778,7 @@ const selectedSignature = (_signatureId: string) => {
     flex-shrink: 0;
     font-size: 14px;
     position: relative;
-    z-index: 999;
+    /* z-index: 999; */
 }
 /* 左侧按钮组 */
 .writeMail .editorToolbar .editorToolbarLeft {
@@ -773,6 +977,19 @@ const selectedSignature = (_signatureId: string) => {
     padding: 0px 10px;
     box-sizing: border-box;
 }
+.writeMail .inputContent .forwardPreview {
+    width: 100%;
+    flex-shrink: 0;
+    padding: 0px 10px 16px;
+    box-sizing: border-box;
+    cursor: default;
+    color: var(--text-primary);
+    font-size: 14px;
+}
+.writeMail .inputContent .forwardPreview :deep(.novamailForwardBlock) {
+    width: 100%;
+    box-sizing: border-box;
+}
 
 /* 富文本框 */
 .writeMail > div:first-of-type {
@@ -826,5 +1043,216 @@ const selectedSignature = (_signatureId: string) => {
     background: var(--bg-primary);
 
     box-sizing: border-box;
+}
+
+.filePickerDialog {
+    width: min(900px, calc(100vw - 80px));
+    height: min(520px, calc(100vh - 180px));
+    min-height: 360px;
+    display: grid;
+    grid-template-columns: 300px minmax(0, 1fr);
+    background-color: var(--bg-primary);
+    overflow: hidden;
+}
+.filePickerSidebar {
+    width: 300px;
+    min-width: 0;
+    min-height: 0;
+    border-right: 1px solid var(--border-primary);
+    display: flex;
+    flex-direction: column;
+}
+.filePickerSearch {
+    position: relative;
+    padding: 10px;
+    flex-shrink: 0;
+    box-sizing: border-box;
+}
+.filePickerSearch input {
+    width: 100%;
+    min-width: 0;
+    height: 34px;
+    padding: 0 34px 0 10px;
+    border: 1px solid var(--border-primary);
+    border-radius: 8px;
+    outline: none;
+    box-sizing: border-box;
+}
+.filePickerSearch .iconfont {
+    position: absolute;
+    right: 22px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-tertiary);
+    pointer-events: none;
+}
+.filePickerList {
+    min-height: 0;
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 8px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.filePickerItem {
+    width: 100%;
+    min-height: 68px;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-radius: 8px;
+    background-color: var(--bg-secondary4);
+    box-sizing: border-box;
+}
+.filePickerItem.selected {
+    background-color: var(--bg-hover-primary);
+}
+.filePickerIcon {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+}
+.filePickerIcon img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+.filePickerInfo {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.filePickerName,
+.filePickerMeta {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: left;
+}
+.filePickerName {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-secondary1);
+}
+.filePickerMeta {
+    font-size: 12px;
+    color: var(--text-tertiary);
+}
+.filePickerEmpty {
+    min-height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-tertiary);
+    font-size: 13px;
+}
+.filePickerPreview {
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    gap: 10px;
+}
+.filePickerPreviewHeader {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    color: var(--text-secondary1);
+    font-size: 13px;
+    font-weight: 700;
+}
+.filePickerPreviewBody {
+    min-height: 0;
+    flex: 1;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: var(--bg-secondary4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.filePickerPreviewBody img,
+.filePickerPreviewBody iframe {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border: none;
+}
+.filePickerPreviewFallback img {
+    width: 56px;
+    height: 56px;
+    object-fit: contain;
+}
+.filePickerPreviewFallback {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    color: var(--text-tertiary);
+    font-size: 13px;
+}
+.filePickerPreviewFallback .iconfont {
+    font-size: 40px;
+}
+
+@media (max-height: 620px) {
+    .filePickerDialog {
+        height: calc(100vh - 150px);
+        min-height: 300px;
+    }
+    .filePickerItem {
+        min-height: 58px;
+    }
+}
+
+@media (max-width: 760px) {
+    .filePickerDialog {
+        width: calc(100vw - 40px);
+        grid-template-columns: 240px minmax(0, 1fr);
+    }
+    .filePickerSidebar {
+        width: 240px;
+    }
+}
+.attachmentStrip {
+    width: 100%;
+    padding: 4px 10px 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.attachmentChip {
+    max-width: 100%;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    background-color: var(--bg-secondary4);
+}
+.attachmentName,
+.attachmentSize {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 12px;
+}
+.attachmentName {
+    max-width: 220px;
+}
+.attachmentSize {
+    color: var(--text-tertiary);
+}
+.attachmentChip .button {
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    font-size: 14px;
 }
 </style>

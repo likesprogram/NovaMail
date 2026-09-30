@@ -22,10 +22,14 @@ public interface MailBoxesMapper {
     MailBoxes selectById(@Param("mailBoxId")Long mailBoxId);
 
     // 通过用户ID获取邮箱
-    @Select("SELECT * FROM MailBoxes WHERE userId = #{userId}")
+    @Select("SELECT * FROM MailBoxes WHERE userId = #{userId} AND isOpen <> 2")
     List<MailBoxes> selectByUserId(@Param("userId")Long userId);
 
     // 通过域名ID获取邮箱
-    @Select("SELECT * FROM MailBoxes WHERE domainNameId = #{domainNameId}")
+    @Select("SELECT * FROM MailBoxes WHERE domainNameId = #{domainNameId} AND isOpen <> 2")
     List<MailBoxes> selectByDomainId(@Param("domainNameId")Long domainNameId);
+
+    // 更新邮箱状态
+    @Update("UPDATE MailBoxes SET isOpen = #{isOpen} WHERE mailBoxId = #{mailBoxId} AND userId = #{userId}")
+    int updateOpenStatus(@Param("mailBoxId")Long mailBoxId, @Param("userId")Long userId, @Param("isOpen")Integer isOpen);
 }

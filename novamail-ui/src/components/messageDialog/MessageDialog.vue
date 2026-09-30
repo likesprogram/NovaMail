@@ -1,7 +1,12 @@
 <template>
     <div class="messageDialogBox" ref="messageDialog">
         <div class="messageDialogBackground"  @click="Close" v-if="showModal"></div>
-        <div ref="dialog" class="messageDialog" tabindex="-1">
+        <div
+            ref="dialog"
+            class="messageDialog"
+            :style="{ width: props.width, maxWidth: props.maxWidth, maxHeight: props.maxHeight }"
+            tabindex="-1"
+        >
             <header>
                 <div class="title" ref="title">
                     <slot name="title">
@@ -52,11 +57,23 @@ const showModal = ref(false); // 是否Modal对话框
 const messageDialog = ref<HTMLElement | undefined>(undefined);
 const title = ref<HTMLElement | undefined>(undefined);
 const dialog = ref<HTMLElement | undefined>(undefined);
+const props = withDefaults(defineProps<{
+    width?: string;
+    maxWidth?: string;
+    maxHeight?: string;
+}>(), {
+    maxWidth: 'calc(100vw - 32px)',
+    maxHeight: 'calc(100vh - 32px)',
+});
 
 let panel: Panel | null = null;
 onMounted(() => {
-    // 将容器添加到 body 中
-    if (messageDialog.value) document.body.appendChild(messageDialog.value);
+    if (messageDialog.value) {
+        // 将容器添加到 body 中
+        document.body.appendChild(messageDialog.value); 
+        // 隐藏容器
+        messageDialog.value?.style.setProperty('display', 'none');
+    }
     if (dialog.value) {
         panel = new Panel(dialog.value, messageDialog.value, {
             animation: 'fade',
@@ -80,6 +97,9 @@ const Show = () => {
     // 移除事件监听
     document.removeEventListener('keydown', handleKeydown);
 
+    // 显示容器
+    if (messageDialog.value) messageDialog.value?.style.setProperty('display', 'block');
+
     // 显示对话框
     panel?.show({center: true});
 };
@@ -91,12 +111,18 @@ const ShowModal = () => {
     // 监听键盘事件，确保焦点管理
     document.addEventListener('keydown', handleKeydown);
 
+    // 显示容器
+    if (messageDialog.value)messageDialog.value?.style.setProperty('display', 'block');
+
     // 显示对话框
     panel?.show({center: true});
 };
 const Close = () => {
     show.value = false;         // 关闭对话框
     showModal.value = false;    // 关闭 Modal 模式
+    
+    // 隐藏容器
+    if (messageDialog.value)messageDialog.value?.style.setProperty('display', 'none');
 
     // 移除事件监听
     document.removeEventListener('keydown', handleKeydown);
@@ -162,6 +188,14 @@ defineExpose({
 
 <style scoped>
 .messageDialogBox {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    top: 0px;
+    left: 0px;
+    max-width: 100%;
+    max-height: 100%;
+    overflow: hidden;
     z-index: 9999999999;
 }
 
@@ -183,12 +217,11 @@ defineExpose({
     z-index: 2;
     min-width: 200px;
     min-height: 220px;
+    box-sizing: border-box;
     border-radius: 8px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
     background: #fff;
     overflow: hidden;
-    /* 自动开启纵向滚动条 */
-    overflow-y: auto;
     margin: 10px;
     display: flex;
     flex-direction: column;
@@ -202,6 +235,7 @@ defineExpose({
 
 /* 标题栏 */
 .messageDialog header {
+    flex-shrink: 0;
     max-width: 100%;
     display: flex;
     justify-content: space-between;
@@ -243,10 +277,12 @@ defineExpose({
 
 .messageDialog main {
     display: flex;
-    justify-content: center;
-    align-items: center;
+    justify-content: flex-start;
+    align-items: stretch;
+    flex: 1 1 auto;
+    min-height: 0;
     width: 100%;
-    height: 100%;
+    overflow-y: auto;
     /* min-height: 100px; */
     position: relative;
 }

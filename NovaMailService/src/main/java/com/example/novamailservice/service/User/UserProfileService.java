@@ -21,4 +21,6 @@ public interface UserProfileService {
     ResponseResult<String> updateAvatar(Users user, String base64Data, String fileName);
     // 修改简介
     ResponseResult<String> updateResume(Users user, String resume);
+    // 修改默认邮箱
+    ResponseResult<String> updateDefaultMailBox(Users user, Long mailBoxId);
 }

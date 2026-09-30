@@ -3,16 +3,20 @@ import type { RouteRecordRaw } from 'vue-router';
 export const AgreementRoutes: RouteRecordRaw[] = [
     {
         path: '/agreement',
-        name: 'agreement',  // 协议
-        component: () => import('@views/email/Sent.vue'),
+        name: 'agreement',
+        redirect: { name: 'userAgreement' },
+        meta: { requiresAuth: false, title: '协议与政策' },
+    },
+    {
+        path: '/agreement/user',
+        name: 'userAgreement',
+        component: () => import('@views/agreement/UserAgreement.vue'),
         meta: { requiresAuth: false, title: '用户协议' },
-        children: [
-            {
-                path: ':id',
-                name: 'agreementDetail',
-                component: () => import('@views/email/Star.vue'),
-                meta: { requiresAuth: false },
-            }
-        ],
+    },
+    {
+        path: '/agreement/privacy',
+        name: 'privacyPolicy',
+        component: () => import('@views/agreement/PrivacyPolicy.vue'),
+        meta: { requiresAuth: false, title: '隐私政策' },
     },
 ];

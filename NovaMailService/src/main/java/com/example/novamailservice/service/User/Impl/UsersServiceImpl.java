@@ -131,4 +131,22 @@ public class UsersServiceImpl implements UsersService {
             return ResponseResult.error(ErrorCode.INTERNAL_ERROR, "密码修改失败");
         }
     }
+
+    @Override
+    public ResponseResult<String> resetPassword(Users user) {
+        try {
+            if (user == null || user.getUserId() == null) return ResponseResult.error(ErrorCode.USER_INVALID, "用户信息无效");
+
+            cache.removeCache(redisKeyPrefixAccount + user.getAccount());
+            if (usersMapper.updatePassword(user) > 0) {
+                cache.removeCache(redisKeyPrefixAccount + user.getAccount());
+                return ResponseResult.success("重置成功");
+            }
+
+            return ResponseResult.error(ErrorCode.DATABASE_ERROR,"重置失败");
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return ResponseResult.error(ErrorCode.INTERNAL_ERROR, "密码重置失败");
+        }
+    }
 }

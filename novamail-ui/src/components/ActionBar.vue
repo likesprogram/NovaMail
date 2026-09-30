@@ -4,7 +4,7 @@
         <div v-for="(actionItem, index) in actionItems"
             :key="actionItem.id ? actionItem.id  : actionItem.title + '-' + index"
             class="actionItem" :style="visibleItems.includes(actionItem) ? '' : 'visibility: hidden'"
-            @click="handleClick(actionItem)">
+            @click="handleClick(actionItem, $event)">
             <span class="actionIcon iconfont" :class="actionItem.icon"></span>
             <span class="actionTitle">{{ actionItem.title }}</span>
         </div>
@@ -19,7 +19,7 @@
                 v-for="(actionItem, index) in hiddenItems"
                 :key="actionItem.id ? actionItem.id : actionItem.title + '-' + index"
                 class="moreItem"
-                @click="handleClick(actionItem)"
+                @click="handleClick(actionItem, $event)"
               >
                 <span class="actionIcon iconfont" :class="actionItem.icon"></span>
                 <span class="actionTitle">{{ actionItem.title }}</span>
@@ -38,7 +38,7 @@ export interface ActionItem {
     id?: number | string, // 可选的唯一标识符
     icon: string,
     title: string,
-    onClick?: () => void | (() => Promise<void>), // 点击事件
+    onClick?: (target?: HTMLElement) => void | Promise<void>, // 点击事件
     [key: string]: any   // 允许多余字段
 }
 </script>
@@ -52,8 +52,10 @@ const props = withDefaults(defineProps<{
 });
 
 // 点击事件
-const handleClick = (actionItem: ActionItem) => {
-    if (actionItem.onClick) actionItem.onClick();
+const handleClick = (actionItem: ActionItem, event: MouseEvent) => {
+    event.stopPropagation();
+    if (actionItem.onClick) actionItem.onClick(event.currentTarget as HTMLElement);
+    showMore.value = false;
 }
 
 // 响应式计算, 布局
@@ -86,28 +88,44 @@ const updateVisible = () => {
 
     const style = window.getComputedStyle(barRef.value!);
     const gap = parseFloat(style.gap) || parseFloat(style.columnGap) || parseFloat(style.rowGap) || 0;
+    const itemWidths = props.actionItems.map((_item, index) => {
+        const el = children[index];
+        return el ? el.offsetWidth : 0;
+    });
+    const totalItemsWidth = itemWidths.reduce((total, width) => total + width, 0)
+        + Math.max(props.actionItems.length - 1, 0) * gap;
+
+    if (totalItemsWidth <= containerWidth) {
+        visibleItems.value = [...props.actionItems];
+        hiddenItems.value = [];
+        showMore.value = false;
+        moreBtnRef.value!.style.visibility = 'hidden';
+        return;
+    }
 
     props.actionItems.forEach((item, idx) => {
-        const el = children[idx];
-        if (!el) return;
-        
-        const itemWidth = el.offsetWidth + gap;
+        const itemWidth = itemWidths[idx];
+        if (!itemWidth) return;
+
+        const nextUsed = tempVisible.length > 0 ? used + gap + itemWidth : itemWidth;
         const remainingItems = props.actionItems.length - idx - 1;
-        const reserve = remainingItems > 0 || tempHidden.length > 0 ? moreWidth.value : 0;
-        
-        const allWidth = tempHidden.length > 0 ? used + itemWidth + reserve : used + itemWidth + reserve - gap;
-        if (hiddenStarted || allWidth > containerWidth) {
+        const reserve = remainingItems > 0 ? moreWidth.value + gap : 0;
+
+        if (hiddenStarted || nextUsed + reserve > containerWidth) {
             tempHidden.push(item);
             hiddenStarted = true;
         } else {
             tempVisible.push(item);
-            used += itemWidth;
-            moreBtnRef.value!.style.left = used + 'px';
+            used = nextUsed;
         }
     });
     visibleItems.value = tempVisible;
     hiddenItems.value = tempHidden;
     moreBtnRef.value!.style.visibility = hiddenItems.value.length > 0 ? 'visible' : 'hidden';
+    moreBtnRef.value!.style.left = hiddenItems.value.length > 0
+        ? `${tempVisible.length > 0 ? used + gap : 0}px`
+        : '0px';
+    if (hiddenItems.value.length === 0) showMore.value = false;
 };
 
 let observer: ResizeObserver;

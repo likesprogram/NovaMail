@@ -335,4 +335,23 @@ public class UserProfileServiceImpl implements UserProfileService {
             return ResponseResult.error("简介昵称失败");
         }
     }
+
+    @Override
+    public ResponseResult<String> updateDefaultMailBox(Users user, Long mailBoxId) {
+        if (user == null || user.getUserId() == null || mailBoxId == null || mailBoxId <= 0) {
+            return ResponseResult.error(ErrorCode.PARAM_INVALID, "参数错误");
+        }
+
+        String redisKey = redisKeyPrefixAccount + user.getAccount();
+        try {
+            cache.removeCache(redisKey);
+            if (userProfileMapper.updateDefaultMailBox(user.getUserId(), mailBoxId) <= 0) {
+                return ResponseResult.error(ErrorCode.DATABASE_ERROR, "默认邮箱更新失败");
+            }
+            cache.removeCache(redisKey);
+            return ResponseResult.success("设置成功");
+        } catch (Exception e) {
+            return ResponseResult.error(ErrorCode.DATABASE_ERROR, "默认邮箱更新失败");
+        }
+    }
 }

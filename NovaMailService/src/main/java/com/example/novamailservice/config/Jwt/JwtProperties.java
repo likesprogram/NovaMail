@@ -8,10 +8,18 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @ConfigurationProperties(prefix = "jwt")
 public class JwtProperties {
-    // 密钥
     private String secret;
-    // 密码加密力度
     private int strength;
-    // 过期时间
     private int expiration;
+    private int accessExpiration;
+    private int refreshExpiration;
+
+    public int getAccessExpirationSeconds() {
+        return accessExpiration > 0 ? accessExpiration : expiration;
+    }
+
+    public int getRefreshExpirationSeconds() {
+        int accessSeconds = getAccessExpirationSeconds();
+        return refreshExpiration > 0 ? refreshExpiration : Math.max(accessSeconds * 24 * 7, accessSeconds);
+    }
 }

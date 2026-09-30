@@ -79,6 +79,12 @@ public class UserProfileController {
         userAvatarService.writeAvatarByAccount(account, response);
     }
 
+    @GetMapping("/defaultAvatar")
+    @Operation(summary = "系统默认头像")
+    public void defaultAvatar(HttpServletResponse response) throws Exception {
+        userAvatarService.writeDefaultAvatar(response);
+    }
+
     @GetMapping("/mailBoxAvatar")
     @Operation(summary = "用户头像")
     public void mailBoxAvatar(@RequestParam("mailBoxAddress") String mailBoxAddress, HttpServletResponse response) throws Exception {

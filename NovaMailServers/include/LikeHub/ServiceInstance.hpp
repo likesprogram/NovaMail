@@ -31,6 +31,25 @@ namespace LikeHub {
         uint64_t delayMs  = 0; // 延迟
     };
 
+    struct ServiceLoadSnapshot {
+        InstanceMetricsSnapshot metrics;
+        double cpu = 0.0;
+        double mem = 0.0;
+        double stress = 0.0;
+        double lat = 0.0;
+        double load = 0.0;
+        double effectiveLoad = 0.0;
+    };
+
+    struct ServiceSnapshot {
+        uint64_t serviceId = 0;
+        std::string serviceName;
+        std::string serviceAddress;
+        LifecycleStatus lifecycle = LifecycleStatus::Registering;
+        HealthStatus health = HealthStatus::Unknown;
+        ServiceLoadSnapshot load;
+    };
+
     struct ServiceInstance {
         // 身份与命名域
         std::string serviceName;     // 服务名：例如 "smtp" / "imap" / "auth"（服务发现的主键之一）

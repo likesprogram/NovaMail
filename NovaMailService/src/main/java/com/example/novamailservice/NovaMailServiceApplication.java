@@ -7,11 +7,13 @@ import org.springframework.boot.web.server.WebServerFactoryCustomizer;
 import org.springframework.boot.web.servlet.ServletComponentScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 @EnableTransactionManagement
 @SpringBootApplication
 @EnableAsync  // 启用异步执行
+@EnableScheduling
 @ServletComponentScan  // 启用 Servlet 组件扫描，自动注册 @WebFilter 注解的过滤器
 public class NovaMailServiceApplication {
     public static void main(String[] args) {

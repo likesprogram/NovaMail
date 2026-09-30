@@ -1,13 +1,13 @@
 package com.example.novamailservice.service.Authentication;
 
 import com.example.novamailservice.dto.Result.ResponseResult;
+import com.example.novamailservice.dto.Users.LoginToken;
 
-// 认证服务
 public interface AuthenticationService {
-    // 注册
     ResponseResult<String> register(String account, String password);
-    // 登录
-    ResponseResult<String> login(String account, String password);
-    // 退出登录
+    ResponseResult<LoginToken> login(String account, String password);
+    ResponseResult<LoginToken> refreshToken(String refreshToken);
+    ResponseResult<String> revokeRefreshToken(String refreshToken);
+    ResponseResult<String> resetPassword(String account, String password);
     ResponseResult<String> logout();
 }

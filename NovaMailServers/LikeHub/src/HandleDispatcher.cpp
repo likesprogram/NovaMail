@@ -65,11 +65,11 @@ namespace LikeHub {
         auto service = session->GetService();
         if (service) {
             // 更新负载信息
-            service->UpdateLoad(metrics);
             // 触发节点更新事件
-            ServiceRegistry::Instance().NotifyServiceChanged();
             service->SetStatus(LifecycleStatus::Active);
             service->SetHealthStatus(HealthStatus::Healthy);
+            service->UpdateLoad(metrics);
+            ServiceRegistry::Instance().NotifyServiceChanged(service->GetSnapshot());
         }
 
         LogDebug(

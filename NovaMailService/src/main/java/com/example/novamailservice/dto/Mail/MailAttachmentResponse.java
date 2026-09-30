@@ -10,4 +10,7 @@ public class MailAttachmentResponse {
     private Long fileSize;
     private Boolean isInline;
     private String downloadUrl;
+    private Integer partIndex;
+    private String sourceType;
+    private Long mappingId;
 }

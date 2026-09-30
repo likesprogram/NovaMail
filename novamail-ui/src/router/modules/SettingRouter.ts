@@ -26,6 +26,12 @@ export const SettingRouters: RouteRecordRaw[] = [
                 component: () => import('@views/settings/SystemSetting.vue'),
                 meta: { requiresAuth: true, requiresAdmin: true, title: '系统管理' },
             },
+            {
+                path: 'services',
+                name: 'serviceMonitorSetting',  // 服务监控
+                component: () => import('@views/settings/ServiceMonitor.vue'),
+                meta: { requiresAuth: true, requiresAdmin: true, title: '服务监控' },
+            },
         ],
     },
 ];

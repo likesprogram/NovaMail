@@ -3,6 +3,7 @@ package com.example.novamailservice.util.NovaMailHub;
 import com.example.novamailservice.dto.Result.ResponseResult;
 import com.example.novamailservice.entity.Users.Users;
 import com.example.novamailservice.service.Mail.MailNotifyService;
+import com.example.novamailservice.service.System.SystemServiceMonitorNotifyService;
 import com.example.novamailservice.service.User.UsersService;
 import com.example.novamailservice.util.NovaMailHub.Message.*;
 import io.netty.channel.ChannelHandler;
@@ -25,6 +26,8 @@ public class ClientHandler extends SimpleChannelInboundHandler<RpcMessage> {
     private final Session session;
     private final MailNotifyService mailNotifyService;
     private final UsersService usersService;
+    private final ServiceMonitorStore serviceMonitorStore;
+    private final SystemServiceMonitorNotifyService systemServiceMonitorNotifyService;
 
     /**
      * 由 NovaMailHubClient 启动时绑定。
@@ -33,10 +36,12 @@ public class ClientHandler extends SimpleChannelInboundHandler<RpcMessage> {
     private volatile NovaMailHubClient hubClient;
 
     @Autowired
-    public ClientHandler(Session session, MailNotifyService mailNotifyService, UsersService usersService) {
+    public ClientHandler(Session session, MailNotifyService mailNotifyService, UsersService usersService, ServiceMonitorStore serviceMonitorStore, SystemServiceMonitorNotifyService systemServiceMonitorNotifyService) {
         this.session = session;
         this.mailNotifyService = mailNotifyService;
         this.usersService = usersService;
+        this.serviceMonitorStore = serviceMonitorStore;
+        this.systemServiceMonitorNotifyService = systemServiceMonitorNotifyService;
     }
 
     public void bindClient(NovaMailHubClient hubClient) {
@@ -243,6 +248,32 @@ public class ClientHandler extends SimpleChannelInboundHandler<RpcMessage> {
         }
     }
 
+    private Double asDouble(Object value) {
+        if (value == null) return null;
+        if (value instanceof Number number) return number.doubleValue();
+        try {
+            return Double.parseDouble(String.valueOf(value));
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private Map<String, Object> asMap(Object value) {
+        if (!(value instanceof Map<?, ?> rawMap)) return null;
+
+        Map<String, Object> result = new HashMap<>();
+        rawMap.forEach((key, mapValue) -> {
+            if (key != null) result.put(String.valueOf(key), mapValue);
+        });
+        return result;
+    }
+
+    private Object firstMetadataValue(Map<String, Object> primary, Map<String, Object> fallback, String key) {
+        Object value = primary == null ? null : primary.get(key);
+        if (value != null) return value;
+        return fallback == null ? null : fallback.get(key);
+    }
+
     private void notifyNewEmailByWebSocket(RpcMessage request) {
         Map<String, Object> meta = request.getMetadata();
 
@@ -342,6 +373,7 @@ public class ClientHandler extends SimpleChannelInboundHandler<RpcMessage> {
     }
 
     private void handleHeartbeat(ChannelHandlerContext ctx, RpcMessage request) {
+        long receivedAt = System.currentTimeMillis();
         String serviceId;
 
         try {
@@ -397,7 +429,22 @@ public class ClientHandler extends SimpleChannelInboundHandler<RpcMessage> {
                     request.getRequestId(),
                     serviceId
             );
+
+            notifyCurrentNodeMonitor(ctx, serviceId, System.currentTimeMillis() - receivedAt);
         });
+    }
+
+    private void notifyCurrentNodeMonitor(ChannelHandlerContext ctx, String serviceId, long delayMs) {
+        if (serviceId == null || serviceId.isBlank()) return;
+        if (ctx == null || !ctx.channel().isActive()) return;
+
+        try {
+            systemServiceMonitorNotifyService.notifyServiceChanged(
+                    serviceMonitorStore.updateCurrentNodeHeartbeat(serviceId, buildMetrics(ctx), delayMs)
+            );
+        } catch (Exception e) {
+            logger.warn("Push current node monitor snapshot failed serviceId={}", serviceId, e);
+        }
     }
 
     private void handleServiceChanged(ChannelHandlerContext ctx, RpcMessage request) {
@@ -423,6 +470,52 @@ public class ClientHandler extends SimpleChannelInboundHandler<RpcMessage> {
             ctx.close();
             return;
         }
+
+        Map<String, Object> metadata = request.getMetadata();
+        Map<String, Object> serviceMeta = metadata == null ? null : asMap(metadata.get("service"));
+        Map<String, Object> changedServiceMeta = serviceMeta == null ? metadata : serviceMeta;
+        Map<String, Object> loadMeta = asMap(firstMetadataValue(changedServiceMeta, metadata, "load"));
+
+        Long changedServiceId = asLong(firstMetadataValue(changedServiceMeta, metadata, "serviceId"));
+        String changedServiceName = asString(firstMetadataValue(changedServiceMeta, metadata, "serviceName"));
+        String changedServiceAddress = asString(firstMetadataValue(changedServiceMeta, metadata, "serviceAddress"));
+        Long lifecycle = asLong(firstMetadataValue(changedServiceMeta, metadata, "lifecycle"));
+        Long health = asLong(firstMetadataValue(changedServiceMeta, metadata, "health"));
+
+        if (changedServiceId == null || changedServiceName == null || changedServiceAddress == null) {
+            logger.warn(
+                    "ServiceChanged metadata missing service snapshot fields requestId={} changedServiceId={} changedServiceName={} changedServiceAddress={} metadata={}",
+                    request.getRequestId(),
+                    changedServiceId,
+                    changedServiceName,
+                    changedServiceAddress,
+                    metadata
+            );
+        }
+
+        logger.debug(
+                "NovaMailHub ServiceChanged received requestId={} listenerServiceId={} changedServiceId={} changedServiceName={} changedServiceAddress={} lifecycle={} health={} cpuPct={} memPct={} stressIndicators={} delayMs={} cpu={} mem={} stress={} lat={} load={} effectiveLoad={}",
+                request.getRequestId(),
+                serviceId,
+                changedServiceId,
+                changedServiceName,
+                changedServiceAddress,
+                lifecycle,
+                health,
+                loadMeta == null ? null : asDouble(loadMeta.get("cpuPct")),
+                loadMeta == null ? null : asDouble(loadMeta.get("memPct")),
+                loadMeta == null ? null : asDouble(loadMeta.get("stressIndicators")),
+                loadMeta == null ? null : asDouble(loadMeta.get("delayMs")),
+                loadMeta == null ? null : asDouble(loadMeta.get("cpu")),
+                loadMeta == null ? null : asDouble(loadMeta.get("mem")),
+                loadMeta == null ? null : asDouble(loadMeta.get("stress")),
+                loadMeta == null ? null : asDouble(loadMeta.get("lat")),
+                loadMeta == null ? null : asDouble(loadMeta.get("load")),
+                loadMeta == null ? null : asDouble(loadMeta.get("effectiveLoad"))
+        );
+
+        systemServiceMonitorNotifyService.notifyServiceChanged(serviceMonitorStore.upsert(metadata));
+        notifyCurrentNodeMonitor(ctx, serviceId, -1L);
 
         Map<String, Object> metrics = buildMetrics(ctx);
         Map<String, Object> responseMeta = new HashMap<>();
@@ -458,9 +551,6 @@ public class ClientHandler extends SimpleChannelInboundHandler<RpcMessage> {
                     serviceId
             );
         });
-
-
-        logger.info("NovaMailHub message: OnServiceChanged");
     }
 
     private void handleNewEmailDelivery(ChannelHandlerContext ctx, RpcMessage request) {

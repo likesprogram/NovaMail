@@ -30,8 +30,8 @@
                     <input type="checkbox" v-model="agreeProtocol" id="NovaMailAgree" name="NovaMailAgree"></input>
                     <label class="agree" for="NovaMailAgree">
                         阅读并同意
-                        <a href="">《NovaMail用户协议》</a>与
-                        <a href="">《NovaMail隐私政策》</a>
+                        <router-link class="agreementLink" :to="{ name: 'userAgreement' }" @click.stop>《NovaMail用户协议》</router-link>与
+                        <router-link class="agreementLink" :to="{ name: 'privacyPolicy' }" @click.stop>《NovaMail隐私政策》</router-link>
                     </label>
                 </span>
             </div>
@@ -424,6 +424,12 @@ form {
     word-wrap: break-word;
     word-break: break-all;
     text-align: left;
+}
+.inputGroup .agree .agreementLink:hover {
+    color: var(--text-link-hover);
+}
+.inputGroup .agree .agreementLink:active {
+    color: var(--text-link-active);
 }
 .messageBox {
     width: 320px;

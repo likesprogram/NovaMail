@@ -53,7 +53,12 @@ const FORBIDDEN_TAGS = new Set([
     'form','input','button','textarea','select'
 ]);
 const SAFE_PROTOCOL = /^(https?:|\/|mailto:)/i;
+const SAFE_IMAGE_DATA_URL = /^data:image\/(png|jpe?g|gif|webp|bmp|svg\+xml);base64,[a-z0-9+/=\s]+$/i;
 const DANGEROUS_STYLE = /(expression|url\s*\(|javascript:)/i;
+const isSafeResourceUrl = (tag: string, name: string, value: string) => {
+    if (SAFE_PROTOCOL.test(value)) return true;
+    return tag === 'img' && name === 'src' && SAFE_IMAGE_DATA_URL.test(value);
+};
 export function ValidateHtml(html: string) {
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
@@ -82,7 +87,7 @@ export function ValidateHtml(html: string) {
                 return;
             }
 
-            if ((name === 'href' || name === 'src') && !SAFE_PROTOCOL.test(value)) {
+            if ((name === 'href' || name === 'src') && !isSafeResourceUrl(tag, name, value)) {
                 el.removeAttribute(name);
                 valid = false;
                 return;

@@ -2,7 +2,7 @@
     <div class="footer">
         <div class="footerContent">
             <span class="footerContentItem">© 2025-现在 龙兵寅版权所有</span>
-            <span class="footerContentItem" v-for="(filing, index) in filings" :key="index">
+            <span v-if="!inNovaShell" class="footerContentItem" v-for="(filing, index) in filings" :key="index">
                 <button @click="openFilingVerify(filing)">
                     <img :src="filing.filingIcon" width="20" :alt="filing.filingName"></img>
                     {{ filing.filingCodeText }}
@@ -22,6 +22,7 @@
 
 <script lang="ts">
 import { defineComponent, ref } from 'vue';
+import { isRunningInNovaShell } from '@utils/NovaShellSdk';
 export default defineComponent({
     name: 'Footer',
 });
@@ -37,6 +38,9 @@ export type Filing = {
 </script>
 
 <script setup lang="ts">
+const inNovaShell = ref(isRunningInNovaShell());
+
+// 备案信息
 const filings = ref<Filing[]>([
     {
         filingName: 'ICP 备案',
@@ -53,6 +57,7 @@ const filings = ref<Filing[]>([
         verifyUrl: 'https://beian.mps.gov.cn/#/query/webSearch'
     }
 ]);
+
 // 联系方式
 const email = '1215065@qq.com';
 

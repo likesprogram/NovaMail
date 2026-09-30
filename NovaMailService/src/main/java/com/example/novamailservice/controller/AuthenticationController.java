@@ -3,12 +3,13 @@ package com.example.novamailservice.controller;
 import com.example.novamailservice.dto.Result.ErrorCode;
 import com.example.novamailservice.dto.Result.ResponseResult;
 import com.example.novamailservice.dto.Result.ServiceException;
+import com.example.novamailservice.dto.Users.LoginToken;
 import com.example.novamailservice.dto.Users.LoginUser;
+import com.example.novamailservice.dto.Users.RefreshTokenRequest;
 import com.example.novamailservice.dto.Users.RegisterUser;
+import com.example.novamailservice.dto.Users.ResetPassword;
 import com.example.novamailservice.service.Authentication.AuthenticationService;
 import com.example.novamailservice.service.VerificationCode.VerificationCodeService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -18,7 +19,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/authentication")
 public class AuthenticationController {
-    private static final Logger logger = LoggerFactory.getLogger(AuthenticationController.class);
     private final AuthenticationService authenticationService;
     private final VerificationCodeService verificationCodeService;
 
@@ -30,12 +30,15 @@ public class AuthenticationController {
 
     @PostMapping("/register")
     public ResponseResult<String> register(@RequestBody RegisterUser registerUser) {
-        // 验证手机号与账号是否一致
-        if (!registerUser.getAccount().equals(registerUser.getSmsCode().getPhoneNumber()))
+        if (!registerUser.getAccount().equals(registerUser.getSmsCode().getPhoneNumber())) {
             return ResponseResult.error(ErrorCode.USER_PHONE_MISMATCH, "账号与验证码手机号不一致");
+        }
 
-        // 验证短信验证码
-        ResponseResult<String> smsCodeResult = verificationCodeService.checkSmsCode(registerUser.getSmsCode().getPhoneNumber(), registerUser.getSmsCode().getCode());
+        ResponseResult<String> smsCodeResult = verificationCodeService.checkSmsCode(
+                registerUser.getSmsCode().getPhoneNumber(),
+                registerUser.getSmsCode().getCode()
+        );
+
         if (smsCodeResult.isSuccess()) {
             try {
                 return authenticationService.register(registerUser.getAccount(), registerUser.getPassword());
@@ -50,11 +53,37 @@ public class AuthenticationController {
     }
 
     @PostMapping("/login")
-    public ResponseResult<String> login(@RequestBody LoginUser loginUser) {
-        // 校验图片验证码
+    public ResponseResult<LoginToken> login(@RequestBody LoginUser loginUser) {
         ResponseResult<String> imageCodeResult = verificationCodeService.checkImageCode(loginUser.getImageCode());
-        if(imageCodeResult.getCode() != 200) return imageCodeResult;
+        if (imageCodeResult.getCode() != 200) {
+            return ResponseResult.error(imageCodeResult.getCode(), imageCodeResult.getMessage());
+        }
         return authenticationService.login(loginUser.getAccount(), loginUser.getPassword());
+    }
+
+    @PostMapping("/refresh")
+    public ResponseResult<LoginToken> refresh(@RequestBody RefreshTokenRequest request) {
+        return authenticationService.refreshToken(request == null ? null : request.getRefreshToken());
+    }
+
+    @PostMapping("/revokeRefresh")
+    public ResponseResult<String> revokeRefresh(@RequestBody RefreshTokenRequest request) {
+        return authenticationService.revokeRefreshToken(request == null ? null : request.getRefreshToken());
+    }
+
+    @PostMapping("/resetPassword")
+    public ResponseResult<String> resetPassword(@RequestBody ResetPassword resetPassword) {
+        if (!resetPassword.getAccount().equals(resetPassword.getSmsCode().getPhoneNumber())) {
+            return ResponseResult.error(ErrorCode.USER_PHONE_MISMATCH, "账号与验证码手机号不一致");
+        }
+
+        ResponseResult<String> smsCodeResult = verificationCodeService.checkSmsCode(
+                resetPassword.getSmsCode().getPhoneNumber(),
+                resetPassword.getSmsCode().getCode()
+        );
+        if (!smsCodeResult.isSuccess()) return smsCodeResult;
+
+        return authenticationService.resetPassword(resetPassword.getAccount(), resetPassword.getPassword());
     }
 
     @PostMapping("/logout")

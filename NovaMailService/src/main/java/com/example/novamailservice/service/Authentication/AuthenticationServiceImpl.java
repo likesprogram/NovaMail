@@ -7,6 +7,7 @@ import com.example.novamailservice.dto.IpInfo;
 import com.example.novamailservice.dto.Result.ErrorCode;
 import com.example.novamailservice.dto.Result.ResponseResult;
 import com.example.novamailservice.dto.Result.ServiceException;
+import com.example.novamailservice.dto.Users.LoginToken;
 import com.example.novamailservice.entity.Mail.MailBoxes;
 import com.example.novamailservice.entity.Users.UserLoginLog;
 import com.example.novamailservice.entity.Users.UserProfile;
@@ -202,7 +203,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public ResponseResult<String> login(String account, String password) {
+    public ResponseResult<LoginToken> login(String account, String password) {
         if (account == null || account.isEmpty()) return ResponseResult.error(ErrorCode.USER_INVALID, "账号不能为空");
         if (password == null || password.isEmpty()) return ResponseResult.error(ErrorCode.USER_INVALID, "密码不能为空");
 
@@ -276,7 +277,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
                 try {
                     // 生成 Token
-                    String token = jwtTokenProvider.generateToken(account);
+                    LoginToken token = jwtTokenProvider.generateTokenPair(account);
                     // 写入登录日志
                     UploadLoginLog("登录成功", user.getUserId());
                     // 返回 Token
@@ -312,11 +313,54 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
+    public ResponseResult<LoginToken> refreshToken(String refreshToken) {
+        return jwtTokenProvider.refreshToken(refreshToken);
+    }
+
+    @Override
+    public ResponseResult<String> revokeRefreshToken(String refreshToken) {
+        jwtTokenProvider.revokeRefreshToken(refreshToken);
+        return ResponseResult.success();
+    }
+
+    @Override
+    public ResponseResult<String> resetPassword(String account, String password) {
+        if (account == null || account.isEmpty()) return ResponseResult.error(ErrorCode.USER_INVALID, "账号不能为空");
+        if (password == null || password.isEmpty()) return ResponseResult.error(ErrorCode.USER_INVALID, "密码不能为空");
+
+        ResponseResult<String> validatePassword = Users.validatePassword(password);
+        if (!validatePassword.isSuccess()) return ResponseResult.error(ErrorCode.USER_INVALID, validatePassword.getMessage());
+
+        ResponseResult<Users> userResult = usersService.getUserByAccount(account);
+        if (!userResult.isSuccess()) {
+            int code = userResult.getCode();
+            if (code == ErrorCode.USER_NOT_FOUND) return ResponseResult.error(ErrorCode.USER_NOT_FOUND, "用户不存在");
+            return ResponseResult.error(code, userResult.getMessage());
+        }
+
+        Users user = userResult.getData();
+        if (jwtTokenProvider.matchesPassword(password, user.getPassword()))
+            return ResponseResult.error(ErrorCode.CONFLICT, "新密码不能与旧密码一致");
+
+        user.setPassword(jwtTokenProvider.encodePassword(password));
+        if (usersService.resetPassword(user).isSuccess()) {
+            String redisKey = redisKeyPrefixUserLocked + account + ":";
+            cache.removeCache(redisKey + "Locked");
+            cache.removeCache(redisKey + "ErrorCount");
+            jwtTokenProvider.revokeAccountTokens(account);
+            return ResponseResult.success("密码重置成功");
+        }
+
+        return ResponseResult.error(ErrorCode.DATABASE_ERROR, "密码重置失败");
+    }
+
+    @Override
     public ResponseResult<String> logout() {
         try {
             // 获取当前登录账号
             String account = RequestContext.getCurrentAccount();
-            jwtTokenProvider.removeToken(account);
+            jwtTokenProvider.revokeAccessToken(RequestContext.getCurrentAccessToken());
+            jwtTokenProvider.revokeCurrentRefreshToken(account);
             return ResponseResult.success();
         } catch (Exception e) {
             return ResponseResult.error("退出失败");

@@ -5,6 +5,30 @@ NovaMailServers/**/bin/
 NovaMailServers/**/obj/
 NovaMailServers/**/logs/
 
+### Local agent / IDE state ###
+**/.codex/
+**/.vs/
+**/.vscode/
+
+### Visual Studio build outputs ###
+**/Debug/
+**/Release/
+**/x64/
+**/x86/
+**/ipch/
+**/packages/
+*.aps
+*.suo
+*.user
+*.VC.db
+*.vsidx
+
+### Desktop generated Vue resources ###
+NovaMailDesktop/NovaMailDesktop/res/vue-dist/
+NovaMailDesktop/NovaMailDesktop/res/vue-dist-generated.rc
+NovaMailDesktop/NovaMailDesktop/res/vue-dist-resource-map.h
+NovaMailDesktop/NovaMailDesktop/res/vue-dist-resources.h
+
 ### Native build artifacts ###
 *.o
 *.d

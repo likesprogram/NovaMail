@@ -2,8 +2,6 @@ package com.example.novamailservice.config.Filter;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.Set;
-
 import jakarta.servlet.*;
 import jakarta.servlet.annotation.WebFilter;
 
@@ -72,9 +70,9 @@ public class LsnCorsFilter implements Filter {
         if (origin == null) origin = originPrefix + ":" + req.getRemotePort();
 
         // 跨域拦截
+        String uri = req.getRequestURI();
         boolean isAllowed = isInList(origin) || isInList(originPrefix);
         if (!isAllowed) {
-            String uri = req.getRequestURI();
             if (isInWhiteList(uri)) {
                 log.warn("来自【{}】的请求，跨域访问白名单地址【{}】", origin, uri);
             } else {

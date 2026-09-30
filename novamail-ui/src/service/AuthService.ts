@@ -4,32 +4,40 @@ import { webSocketService } from '@service/WebSocketService';
 import { TokenStore } from '@store/TokenStore';
 
 export const AuthService = {
-    // 登录
-    login: async (loginData: LoginData) => {
+    login: async (loginData: LoginData, options: { autoLogin?: boolean } = {}) => {
         const res = await Authentication.login(loginData);
-        // 保存 Token
         if (res.code === 200 && res.data) {
-            TokenStore.set(res.data);
-            // 启动 自动刷新 用户信息
+            TokenStore.setTokenPair(res.data, options.autoLogin === true);
             userService.startAutoRefresh();
-            // 建立 WebSocket 连接
             webSocketService.connect();
         }
         return res;
     },
-    // 退出登录
+
     logout: async (notifyBackend: boolean = true) => {
-        if (notifyBackend) try { await Authentication.logout(); } catch (e) { }
-        // 先关闭 WebSocket，避免退出后自动重连
+        const refreshToken = TokenStore.getRefreshToken();
+
+        if (notifyBackend) {
+            if (refreshToken) try { await Authentication.revokeRefresh(refreshToken); } catch (e) { }
+            try { await Authentication.logout(); } catch (e) { }
+        }
+
         webSocketService.close();
-        // 停止 自动刷新 用户信息
         userService.stopAutoRefresh();
-        // 清空用户信息
         userService.clear();
-        // 清理 token
         TokenStore.remove();
 
-        // 刷新页面
         window.location.reload();
-    }
+    },
+
+    cancelAutoLogin: async () => {
+        const refreshToken = TokenStore.getRefreshToken();
+        if (!refreshToken) {
+            TokenStore.disablePersistence();
+            return;
+        }
+
+        try { await Authentication.revokeRefresh(refreshToken); } catch (e) { }
+        TokenStore.disablePersistence();
+    },
 };

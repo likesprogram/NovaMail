@@ -10,6 +10,7 @@ import java.util.List;
 public class MailDetailResponse {
     private Long mappingId;
     private Long mailId;
+    private Long folderId;
     private MailAddressInfo from;
     private List<MailAddressInfo> tos = new ArrayList<>();
     private List<MailAddressInfo> ccs = new ArrayList<>();

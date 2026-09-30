@@ -266,7 +266,7 @@ export const FileProcessing = {
 
         // 通过 URL 返回图标路径
         try {
-          const urlStr = new URL(`../assets/images/fileIcons/${iconName}.png`, import.meta.url).href;
+          const urlStr = new URL(`../assets/icons/fileIcons/${iconName}.png`, import.meta.url).href;
           return urlStr;
         } catch (e) {
           console.warn('默认图标路径解析失败:', e);

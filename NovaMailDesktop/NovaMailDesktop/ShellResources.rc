@@ -1,0 +1,13 @@
+#include <windows.h>
+
+#define IDI_APP_ICON 1
+#define IDR_ICONFONT_TTF 101
+#define IDR_APP_ICON_PNG 102
+#define IDR_APP_ICON_SVG 103
+
+#include "res\\vue-dist-generated.rc"
+
+IDI_APP_ICON ICON "res\\favicon.ico"
+IDR_ICONFONT_TTF RCDATA "res\\iconfont.ttf"
+IDR_APP_ICON_PNG RCDATA "res\\favicon.png"
+IDR_APP_ICON_SVG RCDATA "res\\favicon.svg"

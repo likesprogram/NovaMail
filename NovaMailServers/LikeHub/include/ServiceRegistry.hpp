@@ -1,5 +1,6 @@
 #pragma once
 #include <LikeHub/EventListener.hpp>
+#include <LikeHub/ServiceInstance.hpp>
 #include <unordered_map>
 #include <vector>
 #include <atomic>
@@ -36,9 +37,10 @@ namespace LikeHub {
         // 注册服务实例
         void RegisterService(const std::shared_ptr<Service>& service);
         // 注销服务实例
-        void UnregisterService(uint64_t serviceId);
+        void UnregisterService(uint64_t serviceId, const ServiceSnapshot& removedService = {});
         // 获取服务实例列表
         std::vector<std::shared_ptr<Service>> GetServices(const std::string& serviceName) const;
+        std::vector<ServiceSnapshot> GetServiceSnapshots() const;
         // 获取单个实例
         std::shared_ptr<Service> GetService(uint64_t serviceId) const;
         
@@ -50,7 +52,8 @@ namespace LikeHub {
         // 获取事件监听者
         EventBucketSnapshot GetEventListeners(const std::string& eventName) const;
         // 通知服务监听
-        void NotifyServiceChanged();
+        void NotifyServiceChanged(const ServiceSnapshot& changedService);
+        static LikesProgram::Configuration BuildServiceMetadata(const ServiceSnapshot& service);
         // 获取延迟
         double GetListenerLoad(const EventListener& listener) const noexcept;
         // 注销事件

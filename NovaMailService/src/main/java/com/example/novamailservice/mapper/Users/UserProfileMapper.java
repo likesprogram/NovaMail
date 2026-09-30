@@ -27,4 +27,8 @@ public interface UserProfileMapper {
     // 修改简介
     @Update("UPDATE UserProfile SET resume = #{resume} WHERE userId = #{userId}")
     int updateResume(@Param("userId") Long userId, @Param("resume") String resume);
+
+    // 修改默认邮箱
+    @Update("UPDATE UserProfile SET defaultMailBoxId = #{mailBoxId} WHERE userId = #{userId}")
+    int updateDefaultMailBox(@Param("userId") Long userId, @Param("mailBoxId") Long mailBoxId);
 }

@@ -247,21 +247,6 @@ const doSearch = () => {
     // searchMailList(keyword);
 };
 
-const getSuggestionTypeName = (type: SearchSuggestion['type']) => {
-    switch (type) {
-        case 'subject':
-            return '主题';
-        case 'sender':
-            return '发件人';
-        case 'email':
-            return '邮箱';
-        case 'keyword':
-            return '关键词';
-        default:
-            return '搜索';
-    }
-};
-
 onBeforeUnmount(() => {
     if (searchTimer) {
         clearTimeout(searchTimer);
